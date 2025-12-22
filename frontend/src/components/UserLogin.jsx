@@ -18,7 +18,7 @@ const UserLogin = ({ onBack }) => {
     const endpoint = view === 'login' ? 'login' : 'signup';
     
     try {
-      const res = await fetch(`http://localhost:8080/api/users/${endpoint}`, {
+      const res = await fetch(`https://drivingschoolbackend.vercel.app/api/users/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

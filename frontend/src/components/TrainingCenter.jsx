@@ -18,7 +18,7 @@ const TrainingCenter = ({ darkMode, userId }) => {
       }
 
       try {
-        const res = await fetch(`http://localhost:8080/api/users/progress/${activeId}`);
+        const res = await fetch(`https://drivingschoolbackend.vercel.app/api/users/progress/${activeId}`);
         const result = await res.json();
         
         console.log("DEBUG: Data from Server:", result);

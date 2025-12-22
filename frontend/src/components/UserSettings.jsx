@@ -11,7 +11,7 @@ const UserSettings = ({ user, darkMode, onLogout }) => {
   useEffect(() => {
     const fetchFreshData = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/profiles/${user._id}`);
+        const res = await fetch(`https://drivingschoolbackend.vercel.app/api/profiles/${user._id}`);
         const data = await res.json();
         if (data.success) {
           setDbData({ user: data.user, profile: data.profile || {} });
@@ -41,7 +41,7 @@ const UserSettings = ({ user, darkMode, onLogout }) => {
     const method = showConfirm === 'update' ? 'POST' : 'DELETE';
 
     try {
-      const res = await fetch(`http://localhost:8080${endpoint}`, {
+      const res = await fetch(`https://drivingschoolbackend.vercel.app${endpoint}`, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: showConfirm === 'update' ? JSON.stringify({ userId: user._id, ...data }) : null

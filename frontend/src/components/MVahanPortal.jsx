@@ -23,7 +23,7 @@ const MVahanPortal = ({ onBack }) => {
     const second = cleanInput.substring(4);
 
     try {
-      const response = await fetch(`http://localhost:8080/api/mvd/search?first=${first}&second=${second}`);
+      const response = await fetch(`https://drivingschoolbackend.vercel.app/api/mvd/search?first=${first}&second=${second}`);
       const result = await response.json();
 
       if (response.ok) {

@@ -28,11 +28,11 @@ const Payments = () => {
 
   const fetchInitialData = async () => {
     try {
-      const studentRes = await fetch('http://localhost:8080/api/payments/students');
+      const studentRes = await fetch('https://drivingschoolbackend.vercel.app/api/payments/students');
       const sData = await studentRes.json();
       if(sData.success) setStudents(sData.users || []);
 
-      const payRes = await fetch('http://localhost:8080/api/payments/all');
+      const payRes = await fetch('https://drivingschoolbackend.vercel.app/api/payments/all');
       const pData = await payRes.json();
       if(pData.success) setPayments(pData.payments || []);
     } catch (err) { 
@@ -62,7 +62,7 @@ const Payments = () => {
     if (formData.qrFile) data.append('qrImage', formData.qrFile);
 
     try {
-      const res = await fetch('http://localhost:8080/api/payments/update', {
+      const res = await fetch('https://drivingschoolbackend.vercel.app/api/payments/update', {
         method: 'POST',
         body: data
       });

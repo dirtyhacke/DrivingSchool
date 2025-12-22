@@ -18,7 +18,7 @@ const UsersRegistry = () => {
 
   const fetchMasterRegistry = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/admin/management/master-registry');
+      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/management/master-registry');
       const data = await res.json();
       if (data.success) setStudents(data.users);
     } catch (err) {
@@ -31,7 +31,7 @@ const UsersRegistry = () => {
   const confirmDelete = async () => {
     const id = deleteModal.userId;
     try {
-      const res = await fetch(`http://localhost:8080/api/admin/management/terminate/${id}`, { 
+      const res = await fetch(`https://drivingschoolbackend.vercel.app/api/admin/management/terminate/${id}`, { 
         method: 'DELETE' 
       });
       const data = await res.json();
