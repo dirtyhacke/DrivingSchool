@@ -18,10 +18,22 @@ import reminderRoutes from './routes/reminderRoutes.js';
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// === MongoDB connection (serverless-safe) ===
+let mongoConnected = false;
+const connectOnce = async () => {
+  if (!mongoConnected) {
+    try {
+      await connectDB();
+      mongoConnected = true;
+      console.log('📦 MongoDB Connected');
+    } catch (err) {
+      console.error('❌ MongoDB connection error:', err);
+    }
+  }
+};
+connectOnce();
 
-// Increase payload limits
+// === Body parser / Payload limit ===
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -44,7 +56,7 @@ app.use(cors({
   credentials: true
 }));
 
-// Handle preflight OPTIONS requests explicitly for serverless
+// Handle preflight OPTIONS requests
 app.options('*', cors({
   origin: allowedOrigins,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
@@ -65,10 +77,10 @@ app.use('/api/vehicle-details', vehicleDetailsRoutes);
 app.use('/api/license-details', licenseDetailsRoutes);
 app.use('/api/reminders', reminderRoutes);
 
-// Root endpoint
+// === Root endpoint ===
 app.get('/', (req, res) => res.send('🚀 Driving School Server Running...'));
 
-// Error handling for large payloads
+// === Error handling for large payloads ===
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ 
@@ -86,7 +98,7 @@ export const handler = serverless(app);
 if (process.env.NODE_ENV !== 'production') {
   const PORT = 8080;
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Local Server running on http://localhost:${PORT}`);
     console.log(`📸 Cloudinary uploads enabled (Max: 50MB)`);
     console.log(`🔐 Admin Security Layer Active`);
   });
