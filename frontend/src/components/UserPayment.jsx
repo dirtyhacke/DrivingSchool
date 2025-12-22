@@ -9,7 +9,7 @@ const UserPayment = ({ darkMode, userId }) => {
   useEffect(() => {
     const fetchPayment = async () => {
       try {
-        const res = await fetch(`https://drivingschoolbackend.vercel.app/api/user-payments/my-status/${userId}`);
+        const res = await fetch(`https://drivingschool-9b6b.onrender.com/api/user-payments/my-status/${userId}`);
         const result = await res.json();
         if (result.success) setData(result.data);
       } catch (err) { console.error("Fetch error:", err); }

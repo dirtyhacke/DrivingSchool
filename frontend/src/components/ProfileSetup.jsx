@@ -33,7 +33,7 @@ const ProfileSetup = ({ userId, onComplete }) => {
     };
 
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/profiles/update-account', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/profiles/update-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

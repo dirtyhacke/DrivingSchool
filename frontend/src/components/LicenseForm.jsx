@@ -30,7 +30,7 @@ const LicenseForm = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/license-details/store', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/license-details/store', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

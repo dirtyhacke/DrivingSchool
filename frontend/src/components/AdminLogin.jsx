@@ -20,7 +20,7 @@ const AdminLogin = ({ onBack }) => {
 
       if (sessionActive === 'active' && savedUser) {
         try {
-          const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/verify-session', {
+          const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/verify-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: savedUser })
@@ -46,7 +46,7 @@ const AdminLogin = ({ onBack }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/login', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginData)
@@ -71,7 +71,7 @@ const AdminLogin = ({ onBack }) => {
   const handleVerifySecret = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/verify-secret', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/verify-secret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: secretKeyInput })
@@ -95,7 +95,7 @@ const AdminLogin = ({ onBack }) => {
     if (!newConfig.username || !newConfig.password) return toast.error("FIELDS REQUIRED");
     setLoading(true);
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/update', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newUsername: newConfig.username, newPassword: newConfig.password })

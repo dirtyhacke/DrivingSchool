@@ -19,7 +19,7 @@ const UserDetailsView = () => {
                  : activeSubTab === 'licenses' ? '/api/license-details/list' 
                  : '/api/reminders/list';
     try {
-      const res = await fetch(`https://drivingschoolbackend.vercel.app${endpoint}`);
+      const res = await fetch(`https://drivingschool-9b6b.onrender.com${endpoint}`);
       const result = await res.json();
       if (result.success) setData(result.data);
     } catch (err) { toast.error("Database Sync Failed"); } finally { setLoading(false); }
@@ -204,7 +204,7 @@ const UserDetailsView = () => {
                 <button onClick={() => setDeleteModal({show:false, id:null})} className="flex-1 py-3.5 bg-white/5 text-white rounded-xl font-black uppercase text-[10px] border border-white/10 active:scale-95">No</button>
                 <button onClick={async () => {
                    const endpoint = activeSubTab === 'vehicles' ? 'vehicle-details' : activeSubTab === 'licenses' ? 'license-details' : 'reminders';
-                   const res = await fetch(`https://drivingschoolbackend.vercel.app/api/${endpoint}/${deleteModal.id}`, { method: 'DELETE' });
+                   const res = await fetch(`https://drivingschool-9b6b.onrender.com/api/${endpoint}/${deleteModal.id}`, { method: 'DELETE' });
                    const result = await res.json();
                    if (result.success) {
                      toast.success("REMOVED");

@@ -28,7 +28,7 @@ const Contact = () => {
     }
 
     try {
-      const response = await fetch('https://drivingschoolbackend.vercel.app/api/reminders/activate', {
+      const response = await fetch('https://drivingschool-9b6b.onrender.com/api/reminders/activate', {
         method: 'POST',
         body: formData,
       });

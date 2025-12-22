@@ -13,7 +13,7 @@ const Scheduler = () => {
 
   const fetchSchedulerData = async () => {
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/scheduler/users');
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/scheduler/users');
       const result = await res.json();
       if (result.success) setData(result.data);
     } catch (err) { toast.error("Database Offline"); }
@@ -79,7 +79,7 @@ const Scheduler = () => {
   const handleSave = async (userId, updatedCourses) => {
     setSaving(true);
     try {
-      const res = await fetch('https://drivingschoolbackend.vercel.app/api/admin/scheduler/update', {
+      const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/scheduler/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, courses: updatedCourses })
