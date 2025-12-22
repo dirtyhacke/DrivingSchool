@@ -27,23 +27,32 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // === CORS Setup ===
 const allowedOrigins = [
-  'https://johnsdrivingschool.vercel.app', // frontend
-  'http://localhost:3000'                  // local testing
+  'https://johnsdrivingschool.vercel.app',
+  'http://localhost:3000'
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow mobile apps, curl
+    if (!origin) return callback(null, true); // allow curl or mobile apps
     if (allowedOrigins.indexOf(origin) === -1) {
       return callback(new Error('CORS policy does not allow access from this origin'), false);
     }
     return callback(null, true);
   },
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
-// Map routes
+// Handle preflight OPTIONS requests explicitly for serverless
+app.options('*', cors({
+  origin: allowedOrigins,
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: true
+}));
+
+// === Routes ===
 app.use('/api/mvd', mvdRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profiles', profileRoutes);
@@ -70,7 +79,7 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// === Vercel export ===
+// === Serverless export for Vercel ===
 export const handler = serverless(app);
 
 // === Local development ===
