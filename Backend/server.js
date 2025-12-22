@@ -25,7 +25,23 @@ connectDB();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-app.use(cors());
+// === CORS Setup ===
+const allowedOrigins = [
+  'https://johnsdrivingschool.vercel.app', // frontend
+  'http://localhost:3000'                  // local testing
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow mobile apps, curl
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS policy does not allow access from this origin'), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  credentials: true
+}));
 
 // Map routes
 app.use('/api/mvd', mvdRoutes);
