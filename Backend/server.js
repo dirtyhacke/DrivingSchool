@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import serverless from 'serverless-http';
 import connectDB from './config/db.js';
+
+// Import routes
 import mvdRoutes from './routes/mvdRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
-import adminRoutes from './routes/adminRoutes.js'; // 1. Import Admin Routes
+import adminRoutes from './routes/adminRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
 import schedulerRoutes from './routes/adminSchedulerRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
@@ -14,22 +17,21 @@ import licenseDetailsRoutes from './routes/licenseDetailsRoutes.js';
 import reminderRoutes from './routes/reminderRoutes.js';
 
 const app = express();
-const PORT = 8080;
 
 // Connect to MongoDB
 connectDB();
 
-// INCREASE PAYLOAD LIMITS
+// Increase payload limits
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(cors());
 
-// 2. MAP THE ROUTES
+// Map routes
 app.use('/api/mvd', mvdRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profiles', profileRoutes);
-app.use('/api/admin', adminRoutes); // 3. New Admin endpoint
+app.use('/api/admin', adminRoutes);
 app.use('/api/admin/management', adminUserRoutes);
 app.use('/api/admin/scheduler', schedulerRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -38,21 +40,29 @@ app.use('/api/vehicle-details', vehicleDetailsRoutes);
 app.use('/api/license-details', licenseDetailsRoutes);
 app.use('/api/reminders', reminderRoutes);
 
-app.get('/', (req, res) => res.send('Driving School Server Running...'));
+// Root endpoint
+app.get('/', (req, res) => res.send('🚀 Driving School Server Running...'));
 
-// ERROR HANDLING FOR LARGE PAYLOADS
+// Error handling for large payloads
 app.use((err, req, res, next) => {
-    if (err.type === 'entity.too.large') {
-        return res.status(413).json({ 
-            success: false, 
-            message: "The image file is too large. Please select a smaller photo." 
-        });
-    }
-    next(err);
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ 
+      success: false, 
+      message: "The image file is too large. Please select a smaller photo." 
+    });
+  }
+  next(err);
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server active on http://localhost:${PORT}`);
+// === Vercel export ===
+export const handler = serverless(app);
+
+// === Local development ===
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = 8080;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📸 Cloudinary uploads enabled (Max: 50MB)`);
     console.log(`🔐 Admin Security Layer Active`);
-});
+  });
+}
