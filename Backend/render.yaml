@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    # If your package.json is inside Backend folder:
+    rootDir: Backend
+    # If package.json is at repository root, remove rootDir line
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /health
+    autoDeploy: true
