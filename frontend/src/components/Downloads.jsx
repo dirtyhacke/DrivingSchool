@@ -34,7 +34,7 @@ const Downloads = () => {
       desc: "Official app for Virtual RC & DL on iOS.",
       icon: <Smartphone className="text-slate-900" />,
       action: "App Store",
-      link: "https://apps.apple.com/in/app/mparivahan/id1161358461",
+      link: "https://apps.apple.com/in/app/nextgen-mparivahan/id1450914131",
       type: "app"
     }
   ];

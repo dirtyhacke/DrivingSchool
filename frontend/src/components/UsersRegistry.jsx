@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Trash2, Loader2, User as UserIcon, 
   MapPin, Calendar, ShieldAlert, AlertTriangle,
-  ExternalLink, Copy, Check, Smartphone
+  ExternalLink, Copy, Check, Smartphone, Clock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -58,9 +58,9 @@ const UsersRegistry = () => {
   );
 
   return (
-    <div className="w-full bg-slate-950/20 relative min-h-[500px] pb-32 lg:pb-0">
+    <div className="w-full bg-slate-950/20 relative min-h-[500px] pb-32 lg:pb-0 font-sans">
       
-      {/* --- DELETE MODAL (Remains Centered) --- */}
+      {/* --- DELETE MODAL --- */}
       {deleteModal.show && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setDeleteModal({show:false})}></div>
@@ -102,7 +102,7 @@ const UsersRegistry = () => {
         </div>
       </div>
 
-      {/* --- DESKTOP TABLE (HIDDEN ON MOBILE) --- */}
+      {/* --- DESKTOP TABLE --- */}
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -110,7 +110,7 @@ const UsersRegistry = () => {
               <th className="px-10 py-6">Identity Node</th>
               <th className="px-10 py-6">Contact</th>
               <th className="px-10 py-6">Location</th>
-              <th className="px-10 py-6">Date</th>
+              <th className="px-10 py-6">Timestamp</th>
               <th className="px-10 py-6 text-right">Ops</th>
             </tr>
           </thead>
@@ -122,7 +122,7 @@ const UsersRegistry = () => {
         </table>
       </div>
 
-      {/* --- MOBILE CARD VIEW (HIDDEN ON DESKTOP) --- */}
+      {/* --- MOBILE CARD VIEW --- */}
       <div className="lg:hidden p-4 space-y-4">
         {loading ? (
             <div className="py-20 text-center">
@@ -147,9 +147,14 @@ const UsersRegistry = () => {
   );
 };
 
-/* --- SUB-COMPONENTS FOR CLEANER CODE --- */
+/* --- SUB-COMPONENTS --- */
 
-const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => (
+const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => {
+    const dateObj = new Date(student.createdAt);
+    const date = dateObj.toLocaleDateString();
+    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    return (
     <tr className="hover:bg-blue-600/[0.02] transition-all group">
       <td className="px-10 py-6">
         <div className="flex items-center gap-4">
@@ -172,14 +177,25 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => (
         </a>
       </td>
       <td className="px-10 py-6 text-[10px] font-black text-blue-500 uppercase"><MapPin size={12} className="inline mr-2 text-slate-600" />{student.location}</td>
-      <td className="px-10 py-6 text-[10px] text-slate-500 font-bold">{new Date(student.createdAt).toLocaleDateString()}</td>
+      <td className="px-10 py-6">
+          <div className="text-[10px] text-slate-400 font-bold uppercase">{date}</div>
+          <div className="text-[9px] text-blue-600 font-black flex items-center gap-1 mt-1 uppercase italic">
+            <Clock size={10} /> {time}
+          </div>
+      </td>
       <td className="px-10 py-6 text-right">
         <button onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} className="p-2 text-slate-700 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all"><Trash2 size={16} /></button>
       </td>
     </tr>
-);
+    );
+};
 
-const MobileCard = ({ student, setDeleteModal }) => (
+const MobileCard = ({ student, setDeleteModal }) => {
+    const dateObj = new Date(student.createdAt);
+    const date = dateObj.toLocaleDateString();
+    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    return (
     <div className="bg-white/[0.03] border border-white/5 p-5 rounded-3xl relative overflow-hidden group">
         <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden">
@@ -187,7 +203,12 @@ const MobileCard = ({ student, setDeleteModal }) => (
             </div>
             <div className="flex-1">
                 <h4 className="text-white font-black uppercase text-xs tracking-tight italic">{student.fullName}</h4>
-                <p className="text-[9px] text-slate-500 lowercase mt-0.5">{student.email}</p>
+                <div className="flex items-center gap-3 mt-1">
+                    <span className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">{date}</span>
+                    <span className="text-[8px] text-blue-600 font-black uppercase flex items-center gap-1 italic">
+                        <Clock size={8} /> {time}
+                    </span>
+                </div>
             </div>
             <button onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} className="p-3 bg-red-500/10 text-red-500 rounded-2xl">
                 <Trash2 size={16} />
@@ -209,6 +230,7 @@ const MobileCard = ({ student, setDeleteModal }) => (
             </a>
         </div>
     </div>
-);
+    );
+};
 
 export default UsersRegistry;

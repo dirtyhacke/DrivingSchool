@@ -68,6 +68,7 @@ const Footer = () => {
                   </a>
                 </li>
               ))}
+              <a href="upi://pay?pa=swarajcn774@okicici&pn=DrivingSchool&am=&cu=INR"> <p className="text-slate-300 hover:text-blue-400 font-bold uppercase text-xs tracking-widest flex items-center ml-2">Donate for Developer</p></a>
             </ul>
           </div>
 
