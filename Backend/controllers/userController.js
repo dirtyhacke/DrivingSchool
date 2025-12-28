@@ -7,24 +7,20 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // SSL for port 465
+    secure: true, 
     auth: {
         user: 'swarajcn774@gmail.com',
         pass: 'cojx mjqw lujx vzlg' 
     }
 });
 
-// --- CONNECTION VERIFICATION ---
-// This will run when your server starts to tell you if the login is correct
-transporter.verify((error, success) => {
-    if (error) {
-        console.log("❌ SMTP Connection Error: ", error.message);
-    } else {
-        console.log("✅ Server is ready to send emails");
-    }
+// Verify connection on start
+transporter.verify((error) => {
+    if (error) console.log("❌ Email System Error:", error.message);
+    else console.log("✅ Email System Ready");
 });
 
-// Internal helper to send the alert
+// Internal helper for signup alerts
 const sendAdminAlert = async (newUser) => {
     const mailOptions = {
         from: '"Driving School Alert" <swarajcn774@gmail.com>',
@@ -42,31 +38,14 @@ const sendAdminAlert = async (newUser) => {
             </div>
         `
     };
-
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Mail Sent successfully:", info.response);
-    } catch (error) {
-        console.error("❌ Mail Send Error:", error.message);
+        await transporter.sendMail(mailOptions);
+    } catch (err) {
+        console.error("Mail error suppressed to prevent crash:", err.message);
     }
 };
 
-// --- TEST ROUTE CONTROLLER ---
-export const testEmailConnection = async (req, res) => {
-    try {
-        const info = await transporter.sendMail({
-            from: 'swarajcn774@gmail.com',
-            to: 'swarajcn774@gmail.com',
-            subject: "Localhost Test",
-            text: "The email system is working on localhost:8080!"
-        });
-        res.json({ success: true, message: "Email Sent!", details: info.response });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-};
-
-// --- SIGNUP CONTROLLER ---
+// --- SIGNUP ---
 export const signup = async (req, res) => {
     const { fullName, email, password } = req.body;
     try {
@@ -85,20 +64,21 @@ export const signup = async (req, res) => {
             }]
         });
 
-        // Trigger the mail (using await to ensure it finishes)
-        await sendAdminAlert(newUser);
+        // Trigger mail but DON'T await it - this prevents the signup from 
+        // crashing if the email server is slow or disconnected
+        sendAdminAlert(newUser);
         
         res.status(201).json({ 
             success: true, 
             user: { _id: newUser._id, fullName: newUser.fullName, email: newUser.email, role: newUser.role } 
         });
     } catch (error) {
-        console.error("Signup Error:", error);
+        console.error("Signup Crash prevented:", error);
         res.status(500).json({ success: false, message: "Error creating account" });
     }
 };
 
-// --- LOGIN CONTROLLER ---
+// --- LOGIN ---
 export const login = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -114,14 +94,14 @@ export const login = async (req, res) => {
     }
 };
 
-// --- PROGRESS CONTROLLER ---
+// --- PROGRESS ---
 export const getUserProgress = async (req, res) => {
     try {
         const { userId } = req.params;
         const progress = await Progress.findOne({ userId }).lean();
         const user = await User.findById(userId, 'fullName profileImage').lean();
 
-        if (!progress) return res.status(404).json({ success: false, message: "Progress record not found" });
+        if (!progress) return res.status(404).json({ success: false, message: "Progress not found" });
 
         res.json({
             success: true,
@@ -129,5 +109,20 @@ export const getUserProgress = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching data" });
+    }
+};
+
+// --- TEST ROUTE (Keep this for debugging) ---
+export const testEmailConnection = async (req, res) => {
+    try {
+        await transporter.sendMail({
+            from: 'swarajcn774@gmail.com',
+            to: 'swarajcn774@gmail.com',
+            subject: "Test",
+            text: "Working"
+        });
+        res.json({ success: true, message: "Email Sent!" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 };
