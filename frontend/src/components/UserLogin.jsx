@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { User, Lock, Mail, Loader2, ArrowLeft, Car } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, Lock, Mail, Loader2, ArrowLeft, Car, Phone, MapPin, Home, Camera, UserCircle } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion'; // Added Framer Motion
+import { motion, AnimatePresence } from 'framer-motion';
 import UserDashboard from './UserDashboard';
-import ProfileSetup from './ProfileSetup';
 
 const FloatingInput = ({ icon: Icon, label, type, value, onChange, required, id }) => (
   <div className="relative mb-5 group">
@@ -17,7 +16,7 @@ const FloatingInput = ({ icon: Icon, label, type, value, onChange, required, id 
       value={value}
       onChange={onChange}
       placeholder=" " 
-      className="block w-full px-12 py-4 text-sm text-slate-900 bg-white/50 border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-600 peer transition-all relative z-10"
+      className="block w-full px-12 py-4 text-sm text-slate-900 bg-white border border-slate-200 rounded-2xl appearance-none focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-600 peer transition-all relative z-10"
     />
     <label
       htmlFor={id}
@@ -37,153 +36,154 @@ const UserLogin = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState(null);
   const [view, setView] = useState('auth');
+  const [preview, setPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    fullName: ''
+    fullName: '',
+    phoneNumber: '',
+    address: '',
+    location: ''
   });
 
   const toastStyle = {
-    style: {
-      borderRadius: '16px',
-      background: '#1e293b',
-      color: '#fff',
-      padding: '12px 24px',
-    },
+    style: { borderRadius: '16px', background: '#1e293b', color: '#fff', padding: '12px 24px' },
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2000000) return toast.error("Image too large (max 2MB)", toastStyle);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    if (!isLogin && !preview) return toast.error("Please upload a profile photo!", toastStyle);
+    
     setLoading(true);
     const endpoint = isLogin ? 'login' : 'signup';
     
+    // Prepare payload including image and additional fields for signup
+    const payload = isLogin 
+      ? { email: formData.email, password: formData.password }
+      : { ...formData, profileImage: preview, updatedAt: new Date() };
+
     try {
-      const res = await fetch(`https://drivingschool-9b6b.onrender.com/api/users/${endpoint}`, {
+      const res = await fetch(`http://localhost:8080/api/users/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       
       if (data.success) {
-        toast.success(isLogin ? "Welcome back!" : "Welcome to the family!", toastStyle);
-        localStorage.setItem('userId', data.user._id);
+        toast.success(isLogin ? "Welcome back!" : "Account created successfully!", toastStyle);
         setUserData(data.user);
+        
         if (data.user.role === 'admin') {
           window.location.href = '/admin-dashboard';
           return;
         }
-        isLogin ? setView('dashboard') : setView('setup');
+        setView('dashboard');
       } else {
         toast.error(data.message || "Authentication Failed", toastStyle);
       }
     } catch (err) { 
-      toast.error("Network error. Try again.", toastStyle); 
+      toast.error("Server connection error", toastStyle); 
     } finally { 
       setLoading(false); 
     }
   };
 
   if (view === 'dashboard') return <UserDashboard user={userData} onLogout={() => setView('auth')} />;
-  if (view === 'setup') return <ProfileSetup userId={userData?._id} onComplete={() => setView('dashboard')} />;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 relative overflow-hidden font-sans">
       <Toaster position="top-center" />
-
-      {/* Modern Background Blur Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/10 blur-[100px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-400/10 blur-[100px] rounded-full" />
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[420px] relative z-10"
-      >
-        <div className="bg-white/80 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-white">
+      
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[440px] relative z-10">
+        <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
           
-          <div className="flex flex-col items-center mb-8 text-center">
-            <motion.div 
-              whileHover={{ rotate: 15 }}
-              className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-blue-500/20"
-            >
-              <Car className="text-white" size={28} />
-            </motion.div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight italic">
-              JOHN'S <span className="text-blue-600">DRIVING</span>
+          <div className="flex flex-col items-center mb-6 text-center">
+            {!isLogin ? (
+              /* --- PROFILE IMAGE UPLOAD SECTION --- */
+              <div className="relative w-28 h-28 mb-4">
+                <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                <div 
+                  onClick={() => fileInputRef.current.click()}
+                  className="w-full h-full rounded-full bg-slate-50 border-2 border-dashed border-blue-200 flex items-center justify-center cursor-pointer overflow-hidden hover:border-blue-500 transition-all group"
+                >
+                  {preview ? (
+                    <img src={preview} className="w-full h-full object-cover" alt="Preview" />
+                  ) : (
+                    <div className="flex flex-col items-center text-slate-400">
+                      <Camera size={28} />
+                      <span className="text-[10px] font-bold uppercase mt-1">Photo</span>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white shadow-lg border-2 border-white pointer-events-none">
+                  <Camera size={12} />
+                </div>
+              </div>
+            ) : (
+              <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-200">
+                <Car className="text-white" size={28} />
+              </div>
+            )}
+            
+            <h2 className="text-2xl font-black text-slate-900 italic uppercase">
+              JOHN'S <span className="text-blue-600 not-italic">DRIVING</span>
             </h2>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+              {isLogin ? "Welcome back, please login" : "Student Registration"}
+            </p>
           </div>
 
-          <form onSubmit={handleAuth} className="overflow-hidden">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isLogin ? 'login' : 'signup'}
-                initial={{ x: isLogin ? -20 : 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: isLogin ? 20 : -20, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                {!isLogin && (
-                  <FloatingInput 
-                    id="fullName"
-                    icon={User}
-                    label="Full Name"
-                    type="text"
-                    required
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                  />
-                )}
+          <form onSubmit={handleAuth} className="max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
+            {!isLogin && (
+              <FloatingInput id="fullName" icon={User} label="Full Name" type="text" required
+                value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
+            )}
+            
+            <FloatingInput id="email" icon={Mail} label="Email Address" type="email" required
+              value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+            
+            <FloatingInput id="password" icon={Lock} label="Password" type="password" required
+              value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} />
+
+            {!isLogin && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                <FloatingInput id="phone" icon={Phone} label="Phone Number" type="tel" required
+                  value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} />
                 
-                <FloatingInput 
-                  id="email"
-                  icon={Mail}
-                  label="Email Address"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                />
-
-                <FloatingInput 
-                  id="password"
-                  icon={Lock}
-                  label="Password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                />
+                <FloatingInput id="address" icon={Home} label="Address" type="text" required
+                  value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+                
+                <FloatingInput id="location" icon={MapPin} label="City / Location" type="text" required
+                  value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
               </motion.div>
-            </AnimatePresence>
+            )}
 
-            <motion.button 
-              whileTap={{ scale: 0.97 }}
-              type="submit" 
-              disabled={loading} 
-              className="w-full py-4 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl font-bold text-sm transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center"
-            >
+            <button disabled={loading} className="w-full py-4 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl font-bold transition-all flex items-center justify-center mt-2 shadow-lg shadow-slate-200">
               {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? 'Sign In' : 'Create Account')}
-            </motion.button>
+            </button>
           </form>
 
-          <div className="mt-8 space-y-4 text-center">
-            <button 
-              onClick={() => setIsLogin(!isLogin)} 
-              className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
-            >
+          <div className="mt-6 text-center">
+            <button onClick={() => { setIsLogin(!isLogin); setPreview(null); }} className="text-sm font-bold text-slate-500 hover:text-blue-600">
               {isLogin ? "New student? Create an account" : "Have an account? Sign in"}
             </button>
-            
-            <div className="pt-6 border-t border-slate-100">
-              <button 
-                onClick={onBack} 
-                className="inline-flex items-center gap-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-all uppercase tracking-widest"
-              >
-                 <ArrowLeft size={14} /> Back to Website
-              </button>
-            </div>
+            <button onClick={onBack} className="block w-full mt-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">
+              ← Back to Website
+            </button>
           </div>
         </div>
       </motion.div>
