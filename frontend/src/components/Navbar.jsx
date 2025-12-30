@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Car, ChevronDown, User, ShieldAlert, Monitor, ArrowRight, Home, Image, Download, Contact } from 'lucide-react';
+import { 
+  Car, User, ShieldAlert, Monitor, ArrowRight, 
+  Home, Image, Download, Contact, Languages, 
+  Lock, ShieldCheck, Globe 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = ({ onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showPortal, setShowPortal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isMalayalam, setIsMalayalam] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -13,30 +19,22 @@ const Navbar = ({ onNavigate }) => {
   }, []);
 
   const menuItems = [
-    { name: 'About', href: '#about', icon: <Home size={18} /> },
-    { name: 'Services', href: '#services', icon: <Car size={18} /> },
-    { name: 'mVahan Portal', action: 'mvahan', icon: <Monitor size={18} />, highlight: true },
-    { name: 'Memories', href: '#testimonials', icon: <Image size={18} /> },
-    { name: 'Downloads', href: '#downloads', icon: <Download size={18} /> },
-    { name: 'Contact Us', href: '#ContactUs', icon: <Contact size={18} /> }, // Fixed label and spacing
+    { name: isMalayalam ? 'കുറിച്ച്' : 'About', href: '#about', icon: <Home size={18} /> },
+    { name: isMalayalam ? 'സേവനങ്ങൾ' : 'Services', href: '#services', icon: <Car size={18} /> },
+    { name: isMalayalam ? 'എം-വാഹൻ' : 'mVahan', action: 'mvahan', icon: <Monitor size={18} /> },
+    { name: isMalayalam ? 'ഓർമ്മകൾ' : 'Memories', href: '#testimonials', icon: <Image size={18} /> },
+    { name: isMalayalam ? 'ഡൗൺലോഡ്' : 'Downloads', href: '#downloads', icon: <Download size={18} /> },
+    { name: isMalayalam ? 'ബന്ധപ്പെടുക' : 'Contact', href: '#ContactUs', icon: <Contact size={18} /> },
   ];
 
   const handleLinkClick = (item) => {
-    // If it's a page navigation action (like mvahan)
     if (item.action) {
       onNavigate(item.action);
-    } 
-    // If it's an anchor link (#about etc)
-    else if (item.href) {
-      // Close mobile menu first
-      setIsOpen(false);
-      // Small delay to let the menu close before jumping
-      setTimeout(() => {
-        const element = document.querySelector(item.href);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
+    } else if (item.href) {
+      const element = document.querySelector(item.href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
     setIsOpen(false);
   };
@@ -44,178 +42,157 @@ const Navbar = ({ onNavigate }) => {
   return (
     <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-700 ${
       scrolled 
-        ? 'bg-white/70 backdrop-blur-2xl py-3 border-b border-white/20 shadow-lg' 
-        : 'bg-transparent py-6'
+        ? 'bg-slate-950/90 backdrop-blur-2xl py-4 border-b border-white/10 shadow-2xl' 
+        : 'bg-transparent py-7'
     }`}>
-      {/* Liquid Glow Effect */}
-      {scrolled && <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-blue-500/5 pointer-events-none"></div>}
-
-      <div className="w-full px-6 lg:px-12 flex justify-between items-center relative">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
         
-        {/* Logo */}
-        <div 
-          className="flex items-center gap-3 group cursor-pointer" 
+        {/* LOGO */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3 cursor-pointer shrink-0" 
           onClick={() => { onNavigate('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-            <div className="relative bg-blue-600 p-2.5 rounded-2xl rotate-3 group-hover:rotate-12 transition-transform shadow-lg shadow-blue-500/20">
-              <Car className="text-white" size={20} />
-            </div>
+          <div className="bg-blue-600 p-2 rounded-2xl rotate-3 shadow-lg shadow-blue-500/20">
+             <Car className="text-white" size={18} />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black tracking-tighter uppercase italic text-slate-900">
-              John's <span className="text-blue-600">Driving</span>
+            <span className="text-xl font-black tracking-tighter uppercase italic text-white leading-none">
+              John's <span className="text-blue-500">Driving</span>
             </span>
-            <span className="text-[7px] font-black uppercase tracking-[0.4em] text-slate-400">Malakallu Academy</span>
+            <span className="text-[7px] font-black uppercase tracking-[0.4em] text-blue-400/80 mt-1">Malakallu Academy</span>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Desktop Links */}
+        {/* DESKTOP MENU */}
         <div className="hidden lg:flex items-center gap-10">
-          {menuItems.map((item) => (
-            item.action ? (
+          <div className="flex items-center gap-8 border-r border-white/10 pr-10">
+            {menuItems.map((item) => (
               <button 
                 key={item.name} 
                 onClick={() => handleLinkClick(item)}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 hover:scale-105 transition-all flex items-center gap-2 relative group"
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-all relative group"
               >
-                <Monitor size={14} /> 
                 {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-full"></span>
               </button>
-            ) : (
-              <a 
-                key={item.name} 
-                href={item.href} 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleLinkClick(item);
-                }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-blue-600 transition-all relative group"
-              >
-                {item.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
-              </a>
-            )
-          ))}
+            ))}
+          </div>
 
-          {/* Liquid Portal Button */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowPortal(!showPortal)}
-              className="group flex items-center gap-3 bg-slate-900 text-white px-7 py-3.5 rounded-2xl text-[10px] font-black tracking-widest uppercase overflow-hidden relative shadow-2xl transition-all hover:shadow-blue-500/20 active:scale-95"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <span className="relative z-10 flex items-center gap-2">
-                Access Portal <ChevronDown size={14} className={`transition-transform duration-300 ${showPortal ? 'rotate-180' : ''}`} />
-              </span>
+          <div className="flex items-center gap-8">
+            <button onClick={() => setIsMalayalam(!isMalayalam)} className="text-[10px] font-black text-blue-500 hover:text-white transition-colors">
+              {isMalayalam ? 'ENG' : 'മലയാളം'}
             </button>
-
-            {showPortal && (
-              <div className="absolute right-0 mt-4 w-64 backdrop-blur-3xl bg-white/80 border border-white/20 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-3 animate-in fade-in zoom-in duration-300 overflow-hidden">
-                <button 
-                  onClick={() => { onNavigate('user-login'); setShowPortal(false); }}
-                  className="w-full flex items-center justify-between p-4 hover:bg-blue-600 hover:text-white rounded-[1.8rem] transition-all group text-left mb-1"
-                >
-                  <div className="flex items-center gap-4">
-                    <User size={18} className="group-hover:text-white transition-colors" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">Student</span>
-                  </div>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                </button>
-                <button 
-                  onClick={() => { onNavigate('admin-login'); setShowPortal(false); }}
-                  className="w-full flex items-center justify-between p-4 hover:bg-red-600 hover:text-white rounded-[1.8rem] transition-all group text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <ShieldAlert size={18} className="group-hover:text-white transition-colors" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">Admin</span>
-                  </div>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                </button>
-              </div>
-            )}
+            <button onClick={() => onNavigate('user-login')} className="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+              Student Login
+            </button>
+            <div className="relative" onMouseEnter={() => setShowAdminPanel(true)} onMouseLeave={() => setShowAdminPanel(false)}>
+              <motion.div className={`w-12 h-12 flex items-center justify-center rounded-2xl cursor-pointer transition-all border ${showAdminPanel ? 'bg-blue-600 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-400'}`}>
+                {showAdminPanel ? <ShieldCheck size={20} className="animate-pulse" /> : <Lock size={20} />}
+              </motion.div>
+              <AnimatePresence>
+                {showAdminPanel && (
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-full mr-4 top-0 whitespace-nowrap">
+                    <button onClick={() => onNavigate('admin-login')} className="bg-slate-900 border border-white/10 text-white px-6 h-12 rounded-2xl flex items-center gap-3 hover:border-blue-500 transition-all shadow-2xl">
+                      <ShieldAlert size={16} className="text-blue-500" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Admin Portal</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Toggle */}
-        <button 
-          className="lg:hidden w-12 h-12 flex items-center justify-center bg-slate-900 rounded-2xl text-white shadow-xl active:scale-90 transition-all" 
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* MOBILE ACTIONS */}
+        <div className="flex lg:hidden items-center gap-6">
+          <button 
+            onClick={() => onNavigate('user-login')}
+            className="flex items-center gap-2 group transition-all"
+          >
+            <div className="" />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80 group-active:text-blue-500 transition-colors">
+              {isMalayalam ? 'ലോഗിൻ' : 'student Login'}
+            </span>
+          </button>
+
+          <button 
+            className="relative w-0 h-11 flex flex-col items-center justify-center gap-1.5  rounded-xl border border-transparent z-[210] active:scale-90 transition-all"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <motion.span animate={isOpen ? { rotate: 45, y: 7, width: '22px' } : { rotate: 0, y: 0, width: '18px' }} className="h-0.5 bg-white rounded-full block origin-center transition-all" />
+            <motion.span animate={isOpen ? { opacity: 0 } : { opacity: 1, width: '12px' }} className="h-0.5 bg-blue-500 rounded-full block transition-all" />
+            <motion.span animate={isOpen ? { rotate: -45, y: -7, width: '22px' } : { rotate: 0, y: 0, width: '18px' }} className="h-0.5 bg-white rounded-full block origin-center transition-all" />
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* MOBILE MENU OVERLAY */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 top-0 left-0 w-full h-screen bg-white/60 backdrop-blur-3xl z-[200] lg:hidden flex flex-col p-6 pt-24 overflow-y-auto">
-            {/* Animated Background Blobs */}
-            <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-blue-400/20 blur-[100px] rounded-full"></div>
-            
-            <div className="relative flex items-center justify-between mb-10 px-4">
-                <div>
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Menu</h3>
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-600">John's Driving Academy</p>
-                </div>
-                <button onClick={() => setIsOpen(false)} className="w-10 h-10 flex items-center justify-center bg-slate-900 text-white rounded-full">
-                    <X size={20} />
-                </button>
-            </div>
-            
-            <div className="space-y-3 flex-1 px-2 relative z-[210]">
-              {menuItems.map((item, index) => (
-                <button 
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed inset-0 h-screen bg-slate-950 z-[200] lg:hidden flex flex-col p-8 pt-20"
+          >
+            {/* DYNAMIC ISLAND (TOP LEFT) */}
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute top-8 left-8 flex items-center bg-white/5 border border-white/10 p-1 rounded-2xl backdrop-blur-md"
+            >
+              {/* Admin Button */}
+              <button
+                onClick={() => { onNavigate('admin-login'); setIsOpen(false); }}
+                className="flex items-center gap-2 px-3 py-2 border-r border-white/10 text-slate-400 hover:text-white transition-all"
+              >
+                <ShieldAlert size={14} className="text-blue-500" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Admin</span>
+              </button>
+
+              {/* Translate Button */}
+              <button
+                onClick={() => setIsMalayalam(!isMalayalam)}
+                className="flex items-center gap-2 px-3 py-2 text-white/80 hover:text-white transition-all"
+              >
+                <Globe size={14} className="text-blue-500" />
+                <span className="text-[8px] font-black uppercase tracking-widest">
+                  {isMalayalam ? 'ENG' : 'മല'}
+                </span>
+              </button>
+            </motion.div>
+
+            <div className="flex-1 space-y-4 mt-8">
+              {/* Note: The separate Malayalam toggle button has been moved to the Dynamic Island */}
+              {menuItems.map((item, i) => (
+                <motion.button 
                   key={item.name} 
-                  onClick={() => handleLinkClick(item)}
-                  className="w-full flex items-center justify-between p-5 bg-white border border-white/60 rounded-[2rem] text-left group active:bg-blue-600 transition-all shadow-sm"
+                  initial={{ opacity: 0, x: 20 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  transition={{ delay: i * 0.05 }} 
+                  onClick={() => handleLinkClick(item)} 
+                  className="w-full flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-[2rem] text-left active:bg-white/10 transition-all"
                 >
-                  <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-sm text-blue-600 group-active:scale-90 transition-transform">
-                      {item.icon}
-                    </div>
-                    <span className="text-xl font-black uppercase italic tracking-tighter text-slate-900 group-active:text-white transition-colors">
-                      {item.name}
-                    </span>
+                  <div className="flex items-center gap-5 text-white">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-blue-500">{item.icon}</div>
+                    <span className="text-lg font-black uppercase italic tracking-tighter">{item.name}</span>
                   </div>
-                  <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-active:border-white/40 group-active:text-white transition-all">
-                    <ArrowRight size={18} />
-                  </div>
-                </button>
+                  <ArrowRight size={18} className="text-slate-600" />
+                </motion.button>
               ))}
             </div>
 
-            {/* Mobile Actions */}
-            <div className="grid grid-cols-2 gap-4 mt-6 mb-8 px-2 relative z-[210]">
-              <button 
-                onClick={() => { onNavigate('user-login'); setIsOpen(false); }} 
-                className="flex flex-col items-center gap-3 bg-blue-600 text-white p-7 rounded-[2.5rem] font-black shadow-2xl shadow-blue-500/30 active:scale-95 transition-all"
-              >
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <User size={24} />
-                </div>
-                <span className="text-[10px] uppercase tracking-widest text-center">Student Portal</span>
-              </button>
-              <button 
-                onClick={() => { onNavigate('admin-login'); setIsOpen(false); }} 
-                className="flex flex-col items-center gap-3 bg-slate-900 text-white p-7 rounded-[2.5rem] font-black active:scale-95 transition-all"
-              >
-                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
-                    <ShieldAlert size={24} />
-                </div>
-                <span className="text-[10px] uppercase tracking-widest text-center">Admin Login</span>
-              </button>
+            <div className="mt-auto pb-10 text-center">
+               <p className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em]">John's Driving Academy</p>
             </div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </nav>
   );
 };
-
-// Helper for mobile exit animation logic if AnimatePresence is used
-const AnimatePresence = ({ children }) => <>{children}</>;
 
 export default Navbar;

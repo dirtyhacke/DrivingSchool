@@ -4,84 +4,133 @@ import { Profile } from '../models/Profile.js';
 import nodemailer from 'nodemailer';
 import { v2 as cloudinary } from 'cloudinary';
 
-// --- CLOUDINARY CONFIGURATION ---
+/* ---------------- CLOUDINARY CONFIG ---------------- */
 cloudinary.config({
-    cloud_name: 'your-cloud-name', 
-    api_key: 'your-api-key', 
-    api_secret: 'your-api-secret' 
+    cloud_name: 'your-cloud-name',
+    api_key: 'your-api-key',
+    api_secret: 'your-api-secret'
 });
 
-// --- NODEMAILER CONFIGURATION ---
+/* ---------------- MAIL CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'sebastiannj@gmail.com',
-        pass: 'ckeq gxyp ryiq zfyg' 
+        pass: 'ckeq gxyp ryiq zfyg'
     }
 });
 
-// Helper Function: Send Admin Email Alert
+/* ---------------- EMAIL ALERT ---------------- */
 const sendAdminAlert = async (newUser, profileData, imageUrl) => {
-    const mailOptions = {
-        from: '"Driving School Alert" <sebastiannj@gmail.com>',
-        to: 'sebastiannj@gmail.com',
-        subject: `🚀 New Student Joined: ${newUser.fullName}`,
-        html: `
-            <div style="font-family: sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 500px; background-color: white;">
-                <h2 style="color: #2563eb; text-align: center;">New Student Registration</h2>
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="${imageUrl || 'https://via.placeholder.com/150'}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #2563eb;" />
-                </div>
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                    <p><strong>Full Name:</strong> ${newUser.fullName}</p>
-                    <p><strong>Email:</strong> ${newUser.email}</p>
-                    <p><strong>Phone:</strong> ${profileData.phoneNumber}</p>
-                    <p><strong>Location:</strong> ${profileData.location}</p>
-                    <p><strong>Address:</strong> ${profileData.address}</p>
-                </div>
-                <p style="font-size: 11px; color: #94a3b8; margin-top: 15px; text-align: center;">Timestamp: ${new Date().toLocaleString()}</p>
-            </div>
-        `
-    };
     try {
-        await transporter.sendMail(mailOptions);
-        console.log("✅ Admin alert sent");
+        await transporter.sendMail({
+            from: '"Driving School Alert" <sebastiannj@gmail.com>',
+            to: 'sebastiannj@gmail.com',
+            subject: `🚀 New Student Joined: ${newUser.fullName}`,
+            html: `
+                <h3>New Student Registered</h3>
+                <img src="${imageUrl}" width="100"/>
+                <p><b>Name:</b> ${newUser.fullName}</p>
+                <p><b>Email:</b> ${newUser.email}</p>
+                <p><b>Phone:</b> ${profileData.phoneNumber}</p>
+                <p><b>Location:</b> ${profileData.location}</p>
+                <p><b>Address:</b> ${profileData.address}</p>
+                <small>${new Date().toLocaleString()}</small>
+            `
+        });
     } catch (err) {
-        console.error("❌ Mail error:", err.message);
+        console.error("Mail Error:", err.message);
     }
 };
 
-// --- 1. SIGNUP CONTROLLER ---
+/* ====================================================
+   🔐 SIGNUP — FULLY LOCKED (NO BYPASS POSSIBLE)
+==================================================== */
 export const signup = async (req, res) => {
-    // Destructuring fields based on your Profile Schema
-    const { fullName, email, password, profileImage, phoneNumber, address, location } = req.body;
-    
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ success: false, message: "Email already exists" });
 
-        // A. Upload Profile Image to Cloudinary
-        let imageUrl = "";
-        if (profileImage) {
-            const uploadRes = await cloudinary.uploader.upload(profileImage, {
-                folder: "driving_school_profiles",
+    const {
+        fullName,
+        email,
+        password,
+        phoneNumber,
+        address,
+        location,
+        profileImage
+    } = req.body;
+
+    /* ---------- HARD VALIDATION ---------- */
+    if (
+        !fullName?.trim() ||
+        !email?.trim() ||
+        !password?.trim() ||
+        !phoneNumber?.trim() ||
+        !address?.trim() ||
+        !location?.trim() ||
+        !profileImage
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "ALL fields including profile photo are mandatory"
+        });
+    }
+
+    /* ---------- EXTRA SANITY CHECKS ---------- */
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid email format"
+        });
+    }
+
+    if (phoneNumber.length < 8) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid phone number"
+        });
+    }
+
+    try {
+        /* ---------- EMAIL DUPLICATE ---------- */
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already exists"
             });
-            imageUrl = uploadRes.secure_url;
         }
 
-        // B. Create User
-        const newUser = await User.create({ fullName, email, password, role: 'user' });
+        /* ---------- IMAGE UPLOAD (REQUIRED) ---------- */
+        let imageUrl;
+        try {
+            const uploadRes = await cloudinary.uploader.upload(profileImage, {
+                folder: "driving_school_profiles"
+            });
+            imageUrl = uploadRes.secure_url;
+        } catch {
+            return res.status(400).json({
+                success: false,
+                message: "Profile image upload failed"
+            });
+        }
 
-        // C. Create Profile (Matched to your Schema)
+        /* ---------- CREATE USER ---------- */
+        const newUser = await User.create({
+            fullName,
+            email,
+            password,
+            role: 'user'
+        });
+
+        /* ---------- CREATE PROFILE ---------- */
         const newProfile = await Profile.create({
             userId: newUser._id,
-            phoneNumber: phoneNumber,
-            address: address,
-            location: location,
+            phoneNumber,
+            address,
+            location,
             profileImage: imageUrl
         });
 
-        // D. Initialize Progress
+        /* ---------- INIT PROGRESS ---------- */
         await Progress.create({
             userId: newUser._id,
             courses: [{
@@ -92,68 +141,109 @@ export const signup = async (req, res) => {
             }]
         });
 
-        // E. Trigger Email Alert
+        /* ---------- ADMIN ALERT ---------- */
         sendAdminAlert(newUser, { phoneNumber, address, location }, imageUrl);
-        
-        res.status(201).json({ 
-            success: true, 
-            user: { _id: newUser._id, fullName: newUser.fullName, email: newUser.email },
-            profile: newProfile
+
+        res.status(201).json({
+            success: true,
+            user: {
+                _id: newUser._id,
+                fullName: newUser.fullName,
+                email: newUser.email
+            }
         });
-    } catch (error) {
-        console.error("Signup error:", error);
-        res.status(500).json({ success: false, message: "Error creating account. Ensure all profile fields are provided." });
+
+    } catch (err) {
+        console.error("Signup Error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Account creation failed"
+        });
     }
 };
 
-// --- 2. LOGIN CONTROLLER ---
+/* ====================================================
+   🔐 LOGIN (UNCHANGED LOGIC)
+==================================================== */
 export const login = async (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Email and password required"
+        });
+    }
+
     try {
         const user = await User.findOne({ email, password });
-        if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
+        }
 
-        res.json({ 
-            success: true, 
-            user: { _id: user._id, fullName: user.fullName, email: user.email, role: user.role } 
+        res.json({
+            success: true,
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role
+            }
         });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error" });
+    } catch {
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 };
 
-// --- 3. GET USER PROGRESS ---
+/* ====================================================
+   GET USER PROGRESS
+==================================================== */
 export const getUserProgress = async (req, res) => {
     try {
         const { userId } = req.params;
+
         const progress = await Progress.findOne({ userId }).lean();
         const user = await User.findById(userId, 'fullName').lean();
         const profile = await Profile.findOne({ userId }).lean();
 
-        if (!progress) return res.status(404).json({ success: false, message: "Data not found" });
+        if (!progress) {
+            return res.status(404).json({ success: false, message: "Data not found" });
+        }
 
         res.json({
             success: true,
-            data: { 
-                user: { ...user, profileImage: profile?.profileImage || "" }, 
-                courses: progress.courses || [progress] 
+            data: {
+                user: { ...user, profileImage: profile?.profileImage || "" },
+                courses: progress.courses
             }
         });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Error fetching data" });
+
+    } catch {
+        res.status(500).json({
+            success: false,
+            message: "Error fetching data"
+        });
     }
 };
 
-// --- 4. TEST EMAIL ROUTE ---
+/* ====================================================
+   TEST EMAIL
+==================================================== */
 export const testEmailConnection = async (req, res) => {
     try {
         const info = await transporter.sendMail({
-            from: 'swarajcn774@gmail.com',
-            to: 'swarajcn774@gmail.com',
-            subject: "Test Connection",
-            text: "SMTP is working!"
+            from: 'sebastiannj@gmail.com',
+            to: 'sebastiannj@gmail.com',
+            subject: "Test Email",
+            text: "SMTP working!"
         });
-        res.json({ success: true, message: "Email Sent!", details: info.response });
+        res.json({ success: true, info: info.response });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
