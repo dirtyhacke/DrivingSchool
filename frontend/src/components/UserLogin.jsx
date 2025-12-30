@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { User, Lock, Mail, Loader2, ArrowLeft, Car, Phone, MapPin, Home, Camera, UserCircle } from 'lucide-react';
+import { User, Lock, Mail, Loader2, ArrowLeft, Car, Phone, MapPin, Home, Camera, UserCircle, Navigation } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserDashboard from './UserDashboard';
 
-const FloatingInput = ({ icon: Icon, label, type, value, onChange, required, id }) => (
+const FloatingInput = ({ icon: Icon, label, type, value, onChange, required, id, children }) => (
   <div className="relative mb-5 group">
     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors z-20 pointer-events-none">
       <Icon size={18} />
@@ -28,12 +28,14 @@ const FloatingInput = ({ icon: Icon, label, type, value, onChange, required, id 
     >
       {label}
     </label>
+    {children}
   </div>
 );
 
 const UserLogin = ({ onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
   const [userData, setUserData] = useState(null);
   const [view, setView] = useState('auth');
   const [preview, setPreview] = useState(null);
@@ -50,6 +52,42 @@ const UserLogin = ({ onBack }) => {
 
   const toastStyle = {
     style: { borderRadius: '16px', background: '#1e293b', color: '#fff', padding: '12px 24px' },
+  };
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      return toast.error("Geolocation is not supported by your browser", toastStyle);
+    }
+
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Using OpenStreetMap's Nominatim (Free Reverse Geocoding)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+          
+          const city = data.address.city || data.address.town || data.address.village || "";
+          const postcode = data.address.postcode || "";
+          const locationString = `${city}${city && postcode ? ', ' : ''}${postcode}`;
+
+          setFormData(prev => ({ ...prev, location: locationString }));
+          toast.success("Location found!", toastStyle);
+        } catch (error) {
+          toast.error("Failed to fetch address details", toastStyle);
+        } finally {
+          setLocLoading(false);
+        }
+      },
+      (error) => {
+        setLocLoading(false);
+        toast.error("Location permission denied", toastStyle);
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   const handleImageChange = (e) => {
@@ -69,7 +107,6 @@ const UserLogin = ({ onBack }) => {
     setLoading(true);
     const endpoint = isLogin ? 'login' : 'signup';
     
-    // Prepare payload including image and additional fields for signup
     const payload = isLogin 
       ? { email: formData.email, password: formData.password }
       : { ...formData, profileImage: preview, updatedAt: new Date() };
@@ -113,7 +150,6 @@ const UserLogin = ({ onBack }) => {
           
           <div className="flex flex-col items-center mb-6 text-center">
             {!isLogin ? (
-              /* --- PROFILE IMAGE UPLOAD SECTION --- */
               <div className="relative w-28 h-28 mb-4">
                 <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                 <div 
@@ -168,7 +204,17 @@ const UserLogin = ({ onBack }) => {
                   value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
                 
                 <FloatingInput id="location" icon={MapPin} label="City / Location" type="text" required
-                  value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+                  value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})}>
+                    <button 
+                      type="button" 
+                      onClick={getCurrentLocation}
+                      disabled={locLoading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 z-30 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white transition-all flex items-center gap-1 border border-blue-100 disabled:opacity-50"
+                    >
+                      {locLoading ? <Loader2 size={10} className="animate-spin" /> : <Navigation size={10} />}
+                      Find
+                    </button>
+                </FloatingInput>
               </motion.div>
             )}
 
