@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar, LogOut, ShieldCheck, ChevronRight, CreditCard } from 'lucide-react';
+import { Users, Calendar, LogOut, ShieldCheck, ChevronRight, CreditCard, LayoutGrid } from 'lucide-react';
 
 const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => {
   if (isHajerBookOpen) return null;
@@ -8,6 +8,7 @@ const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => 
     { id: 'users', label: 'Users', icon: <Users size={20} /> },
     { id: 'userdetails', label: 'Registry', icon: <ShieldCheck size={20} /> },
     { id: 'scheduler', label: 'Scheduler', icon: <Calendar size={20} /> },
+    { id: 'slots', label: 'Slots', icon: <LayoutGrid size={20} /> },
     { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
   ];
 

@@ -5,24 +5,27 @@ import toast from 'react-hot-toast';
 const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, onStatusChange, saving, setData }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [activeCourseIndex, setActiveCourseIndex] = useState(0);
+  const [localCourses, setLocalCourses] = useState([]);
 
-  // --- THE CRITICAL FIX: DATA NORMALIZATION ---
-  // This ensures we look for both 'courses' and 'progress' and always return a valid object
-  const getCourses = () => {
-    const rawData = currentUser?.courses || currentUser?.progress;
-    if (Array.isArray(rawData) && rawData.length > 0) return rawData;
-    
-    // Fallback if record is old or corrupted
-    return [{
-      vehicleType: currentUser?.vehicleType || 'four-wheeler',
-      attendance: currentUser?.attendance || Array(1500).fill(0),
-      gridRows: currentUser?.gridRows || 30,
-      gridCols: currentUser?.gridCols || 50
-    }];
-  };
+  // Initialize localCourses when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      const rawData = currentUser?.courses || currentUser?.progress;
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        setLocalCourses(rawData);
+      } else {
+        // Fallback if record is old or corrupted
+        setLocalCourses([{
+          vehicleType: currentUser?.vehicleType || 'four-wheeler',
+          attendance: currentUser?.attendance || Array(1500).fill(0),
+          gridRows: currentUser?.gridRows || 30,
+          gridCols: currentUser?.gridCols || 50
+        }]);
+      }
+    }
+  }, [currentUser]);
 
-  const allCourses = getCourses();
-  const activeCourse = allCourses[activeCourseIndex] || allCourses[0];
+  const activeCourse = localCourses[activeCourseIndex] || localCourses[0];
 
   // Logic constants
   const rows = activeCourse?.gridRows || 30;
@@ -40,18 +43,24 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
     const limit = type === 'gridRows' ? 30 : 50;
     const value = Math.max(1, Math.min(limit, parseInt(val) || 1));
     
-    setData(prev => prev.map(item => {
-      if (item.user._id === selectedUser.user._id) {
-        const updatedProgress = [...allCourses];
-        updatedProgress[activeCourseIndex] = { 
-            ...updatedProgress[activeCourseIndex], 
-            [type]: value 
-        };
-        // We update both keys to ensure backend compatibility
-        return { ...item, progress: updatedProgress, courses: updatedProgress };
+    const updatedCourses = localCourses.map((course, idx) => {
+      if (idx === activeCourseIndex) {
+        return { ...course, [type]: value };
       }
-      return item;
-    }));
+      return course;
+    });
+    
+    setLocalCourses(updatedCourses);
+    
+    // Update parent data
+    if (setData && selectedUser?.user?._id) {
+      setData(prev => prev.map(item => {
+        if (item.user._id === selectedUser.user._id) {
+          return { ...item, progress: updatedCourses, courses: updatedCourses };
+        }
+        return item;
+      }));
+    }
   };
 
   const addNewCourse = () => {
@@ -62,32 +71,120 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
       gridCols: 50
     };
 
-    setData(prev => prev.map(item => 
-      item.user._id === selectedUser.user._id 
-        ? { ...item, progress: [...allCourses, newCourse], courses: [...allCourses, newCourse] } 
-        : item
-    ));
-    setActiveCourseIndex(allCourses.length);
+    const updatedCourses = [...localCourses, newCourse];
+    setLocalCourses(updatedCourses);
+    
+    // Update parent data
+    if (setData && selectedUser?.user?._id) {
+      setData(prev => prev.map(item => 
+        item.user._id === selectedUser.user._id 
+          ? { ...item, progress: updatedCourses, courses: updatedCourses } 
+          : item
+      ));
+    }
+    
+    setActiveCourseIndex(updatedCourses.length - 1);
     toast.success("New Course Added");
   };
 
-  const handleWipeOrDelete = () => {
-    if (allCourses.length > 1) {
+  const handleCellClick = (rowIndex, colIndex) => {
+    console.log(`Cell clicked: row=${rowIndex}, col=${colIndex}`);
+    
+    // Calculate cell index
+    const cellIndex = rowIndex * 50 + colIndex;
+    
+    // Get current status
+    const currentAttendance = [...activeCourse.attendance];
+    const currentStatus = currentAttendance[cellIndex] || 0;
+    
+    // Cycle through status: 0 -> 1 -> 2 -> 0
+    const newStatus = (currentStatus + 1) % 3;
+    currentAttendance[cellIndex] = newStatus;
+    
+    // Update local state
+    const updatedCourses = localCourses.map((course, idx) => {
+      if (idx === activeCourseIndex) {
+        return { ...course, attendance: currentAttendance };
+      }
+      return course;
+    });
+    
+    setLocalCourses(updatedCourses);
+    
+    // Call parent handler
+    if (onCellClick) {
+      onCellClick(selectedUser.user._id, cellIndex, newStatus, activeCourseIndex);
+    }
+    
+    // Update parent data
+    if (setData && selectedUser?.user?._id) {
       setData(prev => prev.map(item => {
         if (item.user._id === selectedUser.user._id) {
-          const filtered = allCourses.filter((_, idx) => idx !== activeCourseIndex);
-          return { ...item, progress: filtered, courses: filtered };
+          return { ...item, progress: updatedCourses, courses: updatedCourses };
         }
         return item;
       }));
+    }
+  };
+
+  const handleStatusChange = (newVehicleType) => {
+    const updatedCourses = localCourses.map((course, idx) => {
+      if (idx === activeCourseIndex) {
+        return { ...course, vehicleType: newVehicleType };
+      }
+      return course;
+    });
+    
+    setLocalCourses(updatedCourses);
+    
+    // Call parent handler
+    if (onStatusChange) {
+      onStatusChange(selectedUser.user._id, newVehicleType, activeCourseIndex);
+    }
+    
+    // Update parent data
+    if (setData && selectedUser?.user?._id) {
+      setData(prev => prev.map(item => {
+        if (item.user._id === selectedUser.user._id) {
+          return { ...item, progress: updatedCourses, courses: updatedCourses };
+        }
+        return item;
+      }));
+    }
+  };
+
+  const handleWipeOrDelete = () => {
+    if (localCourses.length > 1) {
+      const filteredCourses = localCourses.filter((_, idx) => idx !== activeCourseIndex);
+      setLocalCourses(filteredCourses);
+      
+      // Update parent data
+      if (setData && selectedUser?.user?._id) {
+        setData(prev => prev.map(item => {
+          if (item.user._id === selectedUser.user._id) {
+            return { ...item, progress: filteredCourses, courses: filteredCourses };
+          }
+          return item;
+        }));
+      }
+      
       setActiveCourseIndex(0);
       toast.success("Category Deleted Locally");
     } else {
-      setData(prev => prev.map(item => 
-        item.user._id === selectedUser.user._id 
-          ? { ...item, progress: [{ ...activeCourse, attendance: Array(1500).fill(0) }], courses: [{ ...activeCourse, attendance: Array(1500).fill(0) }] } 
-          : item
-      ));
+      const resetCourse = { 
+        ...localCourses[0], 
+        attendance: Array(1500).fill(0) 
+      };
+      setLocalCourses([resetCourse]);
+      
+      // Update parent data
+      if (setData && selectedUser?.user?._id) {
+        setData(prev => prev.map(item => 
+          item.user._id === selectedUser.user._id 
+            ? { ...item, progress: [resetCourse], courses: [resetCourse] } 
+            : item
+        ));
+      }
       toast.success("Ledger Cleared");
     }
     setShowConfirm(false);
@@ -99,8 +196,14 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
     return <Car size={14} />;
   };
 
-  // If data is still resolving, show a spinner instead of a white screen
-  if (!activeCourse) return <div className="fixed inset-0 bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-blue-500" /></div>;
+  // If data is still resolving, show a spinner
+  if (!activeCourse || localCourses.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-[#020617] flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-500" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[999999] bg-[#020617] flex items-center justify-center p-0 md:p-4 animate-in fade-in duration-300">
@@ -112,10 +215,10 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
               <AlertCircle size={32} />
             </div>
             <h3 className="text-white font-black uppercase italic text-xl">
-              {allCourses.length > 1 ? 'Delete Category?' : 'Wipe Ledger?'}
+              {localCourses.length > 1 ? 'Delete Category?' : 'Wipe Ledger?'}
             </h3>
             <p className="text-slate-400 text-[10px] font-bold uppercase mt-2 tracking-widest">
-              {allCourses.length > 1 ? 'This will remove this specific course.' : 'This clears all marked sessions.'}
+              {localCourses.length > 1 ? 'This will remove this specific course.' : 'This clears all marked sessions.'}
             </p>
             <div className="flex gap-4 mt-8">
               <button onClick={() => setShowConfirm(false)} className="flex-1 py-3 bg-white/5 text-white rounded-xl font-black text-[10px] uppercase">Cancel</button>
@@ -139,7 +242,7 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={() => onSave(selectedUser.user._id, allCourses)} disabled={saving} className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg text-white font-black text-[10px] uppercase flex items-center gap-2 transition-all">
+            <button onClick={() => onSave(selectedUser.user._id, localCourses)} disabled={saving} className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg text-white font-black text-[10px] uppercase flex items-center gap-2 transition-all">
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               {saving ? 'Saving...' : 'Save All Changes'}
             </button>
@@ -148,7 +251,7 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
         </div>
 
         <div className="px-6 py-2 bg-[#1c2128] border-b border-white/5 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {allCourses.map((course, idx) => (
+          {localCourses.map((course, idx) => (
             <button
               key={idx}
               onClick={() => setActiveCourseIndex(idx)}
@@ -175,7 +278,7 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
               <span className="text-[9px] font-black text-slate-500 uppercase italic">Configure:</span>
               <select 
                 value={activeCourse.vehicleType} 
-                onChange={(e) => onStatusChange(selectedUser.user._id, e.target.value, activeCourseIndex)} 
+                onChange={(e) => handleStatusChange(e.target.value)} 
                 className="bg-slate-800 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-none outline-none ring-1 ring-white/10"
               >
                 <option value="two-wheeler">2 Wheeler</option>
@@ -248,8 +351,12 @@ const HajerBook = ({ selectedUser, currentUser, onSave, onClose, onCellClick, on
                         return (
                           <button 
                             key={colIndex} 
-                            onClick={() => onCellClick(selectedUser.user._id, cellIndex, status, activeCourseIndex)} 
-                            className={`w-10 h-10 border-r border-white/5 flex items-center justify-center transition-all ${status === 1 ? 'bg-emerald-600/10' : status === 2 ? 'bg-red-600/10' : ''}`}
+                            onClick={() => handleCellClick(rowIndex, colIndex)} 
+                            className={`w-10 h-10 border-r border-white/5 flex items-center justify-center transition-all cursor-pointer ${
+                              status === 1 ? 'bg-emerald-600/10' : 
+                              status === 2 ? 'bg-red-600/10' : 
+                              'hover:bg-white/5'
+                            }`}
                           >
                             <span className={`text-[11px] font-black ${status === 1 ? 'text-emerald-500' : status === 2 ? 'text-red-500' : 'text-transparent'}`}>
                               {status === 1 ? char : status === 2 ? 'A' : ''}

@@ -2,21 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Trash2, Loader2, User as UserIcon, 
   MapPin, Calendar, ShieldAlert, AlertTriangle,
-  ExternalLink, Copy, Check, Smartphone, Clock
+  ExternalLink, Copy, Check, Smartphone, Clock,
+  RefreshCw, X, Info, User
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const UsersRegistry = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteModal, setDeleteModal] = useState({ show: false, userId: null, userName: "" });
+  
+  // New States for Profile View & Image View
+  const [viewUser, setViewUser] = useState(null);
+  const [expandedImg, setExpandedImg] = useState(null);
 
   useEffect(() => {
     fetchMasterRegistry();
   }, []);
 
   const fetchMasterRegistry = async () => {
+    setIsRefreshing(true);
     try {
       const res = await fetch('https://drivingschool-9b6b.onrender.com/api/admin/management/master-registry');
       const data = await res.json();
@@ -25,6 +33,7 @@ const UsersRegistry = () => {
       toast.error("Database connection failed");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -60,6 +69,81 @@ const UsersRegistry = () => {
   return (
     <div className="w-full bg-slate-950/20 relative min-h-[500px] pb-32 lg:pb-0 font-sans">
       
+      {/* --- REFRESH BUTTON (FLOATING MOBILE) --- */}
+      <button 
+        onClick={fetchMasterRegistry}
+        className="fixed bottom-24 right-6 lg:hidden z-50 bg-blue-600 text-white p-4 rounded-full shadow-2xl shadow-blue-500/40 active:scale-90 transition-all"
+      >
+        <RefreshCw size={24} className={isRefreshing ? 'animate-spin' : ''} />
+      </button>
+
+      {/* --- IMAGE EXPANDER MODAL --- */}
+      <AnimatePresence>
+        {expandedImg && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/95 backdrop-blur-xl p-4"
+            onClick={() => setExpandedImg(null)}
+          >
+            <button className="absolute top-10 right-10 text-white hover:rotate-90 transition-all">
+                <X size={40} strokeWidth={1} />
+            </button>
+            <motion.img 
+                initial={{ scale: 0.8 }} animate={{ scale: 1 }}
+                src={expandedImg} className="max-w-full max-h-[80vh] rounded-[2rem] shadow-2xl border border-white/10 object-contain" 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- PROFILE INFO MODAL --- */}
+      <AnimatePresence>
+        {viewUser && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setViewUser(null)}></motion.div>
+             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2.5rem] p-8 w-full max-w-md relative z-[1010] shadow-2xl overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <button onClick={() => setViewUser(null)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-all"><X size={24}/></button>
+                
+                <div className="relative mt-4 flex flex-col items-center">
+                    <div 
+                        onClick={() => viewUser.profileImage && setExpandedImg(viewUser.profileImage)}
+                        className="w-28 h-28 rounded-full border-4 border-white overflow-hidden bg-slate-100 shadow-xl cursor-zoom-in"
+                    >
+                        {viewUser.profileImage ? <img src={viewUser.profileImage} className="w-full h-full object-cover" /> : <User size={40} className="m-auto mt-6 text-slate-300"/>}
+                    </div>
+                    <h3 className="mt-4 text-2xl font-black uppercase italic tracking-tighter text-slate-950">{viewUser.fullName}</h3>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 bg-blue-50 px-4 py-1 rounded-full mt-2">Identity Verified</span>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                    <div className="bg-slate-50 p-4 rounded-2xl">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Registered Endpoint</p>
+                        <div className="flex items-center gap-3 text-slate-900 font-bold text-sm lowercase"><Copy size={14} className="text-slate-400" /> {viewUser.email}</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-2xl">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Location Node</p>
+                            <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase italic"><MapPin size={14} className="text-blue-600" /> {viewUser.location}</div>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-2xl">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Comms</p>
+                            <div className="flex items-center gap-2 text-slate-900 font-black text-xs italic"><Smartphone size={14} className="text-emerald-500" /> {viewUser.phoneNumber}</div>
+                        </div>
+                    </div>
+                    <div className="bg-slate-950 p-5 rounded-2xl text-white">
+                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">Node Metadata</p>
+                         <div className="flex justify-between items-center text-[10px]">
+                            <span className="font-medium text-slate-400 uppercase">Created On</span>
+                            <span className="font-black italic">{new Date(viewUser.createdAt).toLocaleDateString()}</span>
+                         </div>
+                    </div>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* --- DELETE MODAL --- */}
       {deleteModal.show && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -83,7 +167,15 @@ const UsersRegistry = () => {
       {/* --- REGISTRY HEADER --- */}
       <div className="p-6 md:p-10 border-b border-white/10 flex flex-col lg:flex-row justify-between items-center gap-6">
         <div className="text-center lg:text-left">
-          <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-white">Master Registry</h2>
+          <div className="flex items-center justify-center lg:justify-start gap-4">
+            <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-white">Master Registry</h2>
+            <button 
+                onClick={fetchMasterRegistry} 
+                className={`hidden lg:flex p-2 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all ${isRefreshing && 'animate-spin'}`}
+            >
+                <RefreshCw size={16} />
+            </button>
+          </div>
           <div className="flex items-center justify-center lg:justify-start gap-3 mt-2">
             <span className="hidden md:block h-[2px] w-8 bg-blue-600"></span>
             <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
@@ -116,7 +208,14 @@ const UsersRegistry = () => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {!loading && filteredStudents.map((student) => (
-               <DesktopRow key={student._id} student={student} copyToClipboard={copyToClipboard} setDeleteModal={setDeleteModal} />
+               <DesktopRow 
+                key={student._id} 
+                student={student} 
+                copyToClipboard={copyToClipboard} 
+                setDeleteModal={setDeleteModal} 
+                setViewUser={setViewUser} 
+                setExpandedImg={setExpandedImg}
+               />
             ))}
           </tbody>
         </table>
@@ -131,7 +230,13 @@ const UsersRegistry = () => {
             </div>
         ) : filteredStudents.length > 0 ? (
             filteredStudents.map(student => (
-                <MobileCard key={student._id} student={student} setDeleteModal={setDeleteModal} />
+                <MobileCard 
+                    key={student._id} 
+                    student={student} 
+                    setDeleteModal={setDeleteModal} 
+                    setViewUser={setViewUser}
+                    setExpandedImg={setExpandedImg}
+                />
             ))
         ) : (
             <div className="py-20 text-center text-slate-700 uppercase text-[8px] font-black tracking-widest">No Identities Found</div>
@@ -149,7 +254,7 @@ const UsersRegistry = () => {
 
 /* --- SUB-COMPONENTS --- */
 
-const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => {
+const DesktopRow = ({ student, copyToClipboard, setDeleteModal, setViewUser, setExpandedImg }) => {
     const dateObj = new Date(student.createdAt);
     const date = dateObj.toLocaleDateString();
     const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -158,11 +263,14 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => {
     <tr className="hover:bg-blue-600/[0.02] transition-all group">
       <td className="px-10 py-6">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+          <div 
+            onClick={() => student.profileImage && setExpandedImg(student.profileImage)}
+            className="w-10 h-10 rounded-full overflow-hidden border border-white/10 cursor-zoom-in active:scale-95 transition-all"
+          >
             {student.profileImage ? <img src={student.profileImage} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full bg-slate-900 flex items-center justify-center text-slate-700"><UserIcon size={16} /></div>}
           </div>
           <div>
-            <div className="font-bold text-sm text-white uppercase tracking-tight">{student.fullName}</div>
+            <div onClick={() => setViewUser(student)} className="font-bold text-sm text-white uppercase tracking-tight cursor-pointer hover:text-blue-500 transition-all">{student.fullName}</div>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] text-slate-500 lowercase">{student.email}</span>
               <button onClick={() => copyToClipboard(student.email)} className="text-slate-700 hover:text-white"><Copy size={10} /></button>
@@ -183,14 +291,15 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal }) => {
             <Clock size={10} /> {time}
           </div>
       </td>
-      <td className="px-10 py-6 text-right">
+      <td className="px-10 py-6 text-right space-x-2">
+        <button onClick={() => setViewUser(student)} className="p-2 text-slate-700 hover:text-blue-500 hover:bg-blue-500/10 rounded-full transition-all"><Info size={16} /></button>
         <button onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} className="p-2 text-slate-700 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all"><Trash2 size={16} /></button>
       </td>
     </tr>
     );
 };
 
-const MobileCard = ({ student, setDeleteModal }) => {
+const MobileCard = ({ student, setDeleteModal, setViewUser, setExpandedImg }) => {
     const dateObj = new Date(student.createdAt);
     const date = dateObj.toLocaleDateString();
     const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -198,10 +307,13 @@ const MobileCard = ({ student, setDeleteModal }) => {
     return (
     <div className="bg-white/[0.03] border border-white/5 p-5 rounded-3xl relative overflow-hidden group">
         <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden">
+            <div 
+                onClick={() => student.profileImage && setExpandedImg(student.profileImage)}
+                className="w-12 h-12 rounded-full border border-white/10 overflow-hidden cursor-zoom-in"
+            >
                 {student.profileImage ? <img src={student.profileImage} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center"><UserIcon size={18} /></div>}
             </div>
-            <div className="flex-1">
+            <div className="flex-1" onClick={() => setViewUser(student)}>
                 <h4 className="text-white font-black uppercase text-xs tracking-tight italic">{student.fullName}</h4>
                 <div className="flex items-center gap-3 mt-1">
                     <span className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">{date}</span>
@@ -210,9 +322,14 @@ const MobileCard = ({ student, setDeleteModal }) => {
                     </span>
                 </div>
             </div>
-            <button onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} className="p-3 bg-red-500/10 text-red-500 rounded-2xl">
-                <Trash2 size={16} />
-            </button>
+            <div className="flex gap-2">
+                <button onClick={() => setViewUser(student)} className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl active:scale-90">
+                    <Info size={16} />
+                </button>
+                <button onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} className="p-3 bg-red-500/10 text-red-500 rounded-2xl active:scale-90">
+                    <Trash2 size={16} />
+                </button>
+            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

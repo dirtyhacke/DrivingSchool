@@ -1,95 +1,154 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, Car, ShieldCheck, Fuel, Activity, 
-  ArrowLeft, Loader2, AlertCircle, MapPin, 
-  Wrench, ShieldAlert 
+  Search, Car, Loader2, ArrowLeft, Calendar, CreditCard, 
+  ChevronDown, CheckCircle2, Globe, ShieldAlert, AlertCircle 
 } from 'lucide-react';
 
 const MVahanPortal = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
-  const [vehicleInput, setVehicleInput] = useState('');
-  const [error, setError] = useState(null);
+  const [isSlotOpen, setIsSlotOpen] = useState(false);
+  const [idType, setIdType] = useState('application'); 
+  const [bookingData, setBookingData] = useState({ idValue: '', dob: '' });
+  
+  // New State for the Warning Window
+  const [showWarning, setShowWarning] = useState(true);
 
-  // Maintenance is now permanent (no close state)
-  const isMaintenance = true;
+  const handleStartBooking = async () => {
+    if (!bookingData.idValue || !bookingData.dob) return alert("Fill all fields");
+    
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/vehicle/book-slot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idValue: bookingData.idValue,
+          dob: bookingData.dob,
+          type: idType
+        })
+      });
+      const res = await response.json();
+      if (res.success) alert("Automation Window Opened on Server!");
+      else alert("Error: " + res.error);
+    } catch (err) {
+      alert("Connection failed to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans relative">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 px-6 relative">
       
-      {/* --- STICKY MAINTENANCE BANNER --- */}
-      <div className="sticky top-0 z-[100] bg-amber-500 text-white px-6 py-3 flex items-center justify-center gap-3 shadow-lg">
-        <Wrench size={16} className="animate-bounce" />
-        <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-          System Notice: Scheduled Maintenance in Progress
-        </span>
-      </div>
-
-      {/* Decorative background blur */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-      
-      <div className="max-w-4xl mx-auto pt-20 pb-20 px-6 relative z-10 blur-[2px] pointer-events-none">
-        {/* Main content is visible but blurred/disabled during maintenance */}
-        <div className="mb-12">
-          <h2 className="text-5xl md:text-6xl font-black italic uppercase text-slate-900 leading-[0.9] tracking-tighter">
-            mVahan <br /> <span className="text-blue-600">Portal</span>
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-200/60 p-8 h-32 flex items-center justify-center">
-            <p className="text-slate-300 font-black uppercase tracking-widest">Search Disabled</p>
-        </div>
-      </div>
-
-      {/* --- MAINTENANCE MODAL POPUP (NO CLOSE BUTTON) --- */}
+      {/* --- NON-CLOSABLE POPUP WINDOW --- */}
       <AnimatePresence>
-        {isMaintenance && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
-            {/* Dark Backdrop */}
+        {showWarning && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6"
+          >
             <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
-            />
-            
-            {/* Maintenance Card */}
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl text-center"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border-4 border-amber-500"
             >
-              {/* Top Accent Line */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1.5 bg-blue-600 rounded-b-full" />
-              
-              <div className="bg-amber-50 w-20 h-20 rounded-[2rem] flex items-center justify-center text-amber-500 mb-8 mx-auto shadow-inner">
-                <ShieldAlert size={40} />
+              <div className="bg-amber-500 p-8 flex flex-col items-center text-white">
+                <ShieldAlert size={64} className="mb-4 animate-pulse" />
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter">System Alert</h3>
               </div>
-              
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 mb-4">
-                Server on <br /> <span className="text-blue-600">Maintenance</span>
-              </h3>
-              
-              <p className="text-slate-500 text-sm font-bold leading-relaxed mb-10 px-2 uppercase tracking-wide">
-                Maintenance work is currently in progress. This feature will be <span className="text-slate-900">available soon</span>.
-              </p>
-              
-              {/* ONLY BACK BUTTON */}
-              <button 
-                onClick={onBack}
-                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-blue-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-900/10 active:scale-95"
-              >
-                <ArrowLeft size={18} />
-                Back to Home
-              </button>
 
-              <p className="mt-8 text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                System Protected • John's Academy
-              </p>
+              <div className="p-8 text-center">
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3 justify-center text-amber-600">
+                    <AlertCircle size={20} />
+                    <span className="font-black text-xs uppercase tracking-widest">Server Maintenance</span>
+                  </div>
+                  <p className="text-slate-600 font-bold text-sm uppercase leading-relaxed">
+                    The push notification server is currently <span className="text-red-600">offline for maintenance</span>. 
+                    Browser automation may experience delays.
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+                    Access to Parivahan portal is strictly monitored.
+                  </p>
+                </div>
+
+                {/* Action Buttons: No X, only Proceed or Back */}
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => setShowWarning(false)}
+                    className="w-full bg-blue-600 text-white font-black uppercase italic py-4 rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+                  >
+                    I Understand & Proceed
+                  </button>
+                  <button 
+                    onClick={onBack}
+                    className="w-full bg-slate-100 text-slate-500 font-black uppercase text-[10px] py-3 rounded-xl hover:bg-slate-200 transition-all tracking-[0.2em]"
+                  >
+                    Cancel & Go Back
+                  </button>
+                </div>
+              </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* --- MAIN UI CONTENT --- */}
+      <div className="max-w-4xl mx-auto pt-20">
+        <button onClick={onBack} className="flex items-center gap-2 mb-10 font-black text-[10px] uppercase tracking-widest text-slate-500">
+          <ArrowLeft size={16}/> Back
+        </button>
+
+        <h2 className="text-5xl font-black uppercase italic mb-12">mVahan <span className="text-blue-600">Portal</span></h2>
+
+        {/* DL Slot Booking Dropdown */}
+        <div className="bg-white rounded-[2.5rem] shadow-xl border overflow-hidden">
+          <button onClick={() => setIsSlotOpen(!isSlotOpen)} className="w-full p-8 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-2xl">
+                <Calendar className="text-blue-600" size={32}/>
+              </div>
+              <span className="text-xl font-black uppercase italic">Book DL-Slot</span>
+            </div>
+            <ChevronDown className={`transition-transform ${isSlotOpen ? 'rotate-180' : ''}`}/>
+          </button>
+
+          <AnimatePresence>
+            {isSlotOpen && (
+              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="p-8 pt-0 border-t">
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                  {/* Type Selector */}
+                  <div className="flex gap-2">
+                    {['application', 'll'].map(t => (
+                      <button key={t} onClick={() => setIdType(t)} className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase border-2 transition-all ${idType === t ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}>
+                        {t} No
+                      </button>
+                    ))}
+                  </div>
+                  {/* ID Input */}
+                  <input 
+                    type="text" placeholder="Number" 
+                    className="bg-slate-50 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-blue-500 transition-all"
+                    onChange={(e) => setBookingData({...bookingData, idValue: e.target.value})}
+                  />
+                  {/* DOB Input */}
+                  <input 
+                    type="date" 
+                    className="bg-slate-50 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-blue-500 transition-all"
+                    onChange={(e) => setBookingData({...bookingData, dob: e.target.value})}
+                  />
+                  <button onClick={handleStartBooking} disabled={loading} className="bg-blue-600 text-white font-black uppercase py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
+                    {loading ? <Loader2 className="animate-spin"/> : <><Globe size={18}/> Start Scraping</>}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 };

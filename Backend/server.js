@@ -12,7 +12,8 @@ import userPaymentRoutes from './routes/userPaymentRoutes.js';
 import vehicleDetailsRoutes from './routes/vehicleDetailsRoutes.js';
 import licenseDetailsRoutes from './routes/licenseDetailsRoutes.js';
 import reminderRoutes from './routes/reminderRoutes.js';
-
+import vehicleRoutes from './routes/mvdRoutes.js';
+import slotRoutes from './routes/slotRoutes.js';
 const app = express();
 const PORT = 8080;
 
@@ -37,7 +38,8 @@ app.use('/api/user-payments', userPaymentRoutes);
 app.use('/api/vehicle-details', vehicleDetailsRoutes);
 app.use('/api/license-details', licenseDetailsRoutes);
 app.use('/api/reminders', reminderRoutes);
-
+app.use('/api/vehicle', vehicleRoutes);
+app.use('/api/slots', slotRoutes);
 app.get('/', (req, res) => res.send('Driving School Server Running...'));
 
 // ERROR HANDLING FOR LARGE PAYLOADS

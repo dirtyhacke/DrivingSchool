@@ -3,7 +3,7 @@ import { Progress } from '../models/Progress.js';
 
 export const getSchedulerUsers = async (req, res) => {
     try {
-        const users = await User.find({}, 'fullName email profileImage');
+        const users = await User.find({}, 'fullName email profileImage phoneNumber');
         const data = await Promise.all(users.map(async (user) => {
             let record = await Progress.findOne({ userId: user._id });
             

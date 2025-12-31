@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, Award, Settings, LogOut, Car, Sun, Moon, ChevronRight, Wallet } from 'lucide-react';
+import { User, Award, Settings, LogOut, Car, Sun, Moon, ChevronRight, Wallet, LayoutGrid } from 'lucide-react';
 import UserSettings from './UserSettings';
 import TrainingCenter from './TrainingCenter';
 import UserPayment from './UserPayment';
+import TodaySlots from './TodaySlots'; // Import the new component
 
 const UserDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('training');
@@ -25,6 +26,8 @@ const UserDashboard = ({ user, onLogout }) => {
 
         <nav className="flex-1 space-y-2">
           <SidebarBtn icon={<Award size={20}/>} label="Training" active={activeTab === 'training'} onClick={() => setActiveTab('training')} darkMode={darkMode} />
+          {/* NEW OPTION ADDED HERE */}
+          <SidebarBtn icon={<LayoutGrid size={20}/>} label="Today Slots" active={activeTab === 'slots'} onClick={() => setActiveTab('slots')} darkMode={darkMode} />
           <SidebarBtn icon={<Wallet size={20}/>} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} darkMode={darkMode} />
           <SidebarBtn icon={<Settings size={20}/>} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} darkMode={darkMode} />
         </nav>
@@ -54,7 +57,7 @@ const UserDashboard = ({ user, onLogout }) => {
         <header className={`p-6 lg:p-10 flex justify-between items-center sticky top-0 z-30 backdrop-blur-md ${darkMode ? 'bg-[#020617]/80' : 'bg-slate-50/80'}`}>
           <div className="flex items-center gap-4">
              <div className="lg:hidden bg-blue-600 p-2 rounded-lg text-white"><Car size={18} /></div>
-             <h2 className="text-2xl font-black italic uppercase tracking-tighter">{activeTab}</h2>
+             <h2 className="text-2xl font-black italic uppercase tracking-tighter">{activeTab.replace('slots', 'Schedule')}</h2>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden lg:block text-right">
@@ -72,6 +75,8 @@ const UserDashboard = ({ user, onLogout }) => {
 
         <div className="p-6 lg:p-10 max-w-5xl mx-auto">
           {activeTab === 'training' && (userId ? <TrainingCenter darkMode={darkMode} userId={userId} /> : <SessionError />)}
+          {/* LOAD THE COMPONENT HERE */}
+          {activeTab === 'slots' && <TodaySlots darkMode={darkMode} />}
           {activeTab === 'payments' && (userId ? <UserPayment darkMode={darkMode} userId={userId} /> : <SessionError />)}
           {activeTab === 'settings' && <UserSettings user={user} onLogout={onLogout} darkMode={darkMode} />}
         </div>
@@ -80,6 +85,7 @@ const UserDashboard = ({ user, onLogout }) => {
       {/* --- MOBILE BOTTOM NAVIGATION --- */}
       <nav className={`lg:hidden fixed bottom-0 left-0 right-0 h-20 border-t flex items-center justify-around px-6 z-50 backdrop-blur-xl ${darkMode ? 'bg-[#020617]/90 border-white/5' : 'bg-white/90 border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]'}`}>
         <MobileBtn icon={<Award size={22}/>} active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
+        <MobileBtn icon={<LayoutGrid size={22}/>} active={activeTab === 'slots'} onClick={() => setActiveTab('slots')} />
         <MobileBtn icon={<Wallet size={22}/>} active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
         <MobileBtn icon={<Settings size={22}/>} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
         <button onClick={onLogout} className="p-4 text-red-500/50"><LogOut size={22}/></button>
