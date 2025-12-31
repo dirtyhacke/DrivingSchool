@@ -47,15 +47,20 @@ const Navbar = ({ onNavigate }) => {
     }`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
         
-        {/* LOGO */}
+        {/* LOGO SECTION WITH ANIMATION */}
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3 cursor-pointer shrink-0" 
           onClick={() => { onNavigate('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
-          <div className="bg-blue-600 p-2 rounded-2xl rotate-3 shadow-lg shadow-blue-500/20">
-             <Car className="text-white" size={18} />
+          {/* Replaced Car icon with the GIF animation */}
+          <div className=" p-1 rounded-2xl rotate-3 shadow-lg shadow-blue-500/10 borderoverflow-hidden">
+             <img 
+               src="https://cdn.dribbble.com/userupload/36660518/file/original-6d12e617e99c4a331077717af6ff1ff9.gif" 
+               alt="Driving Animation"
+               className="w-10 h-10 object-cover rounded-xl"
+             />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tighter uppercase italic text-white leading-none">
@@ -97,7 +102,7 @@ const Navbar = ({ onNavigate }) => {
                     <button onClick={() => onNavigate('admin-login')} className="bg-slate-900 border border-white/10 text-white px-6 h-12 rounded-2xl flex items-center gap-3 hover:border-blue-500 transition-all shadow-2xl">
                       <ShieldAlert size={16} className="text-blue-500" />
                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">Admin Portal</span>
-                      <ArrowRight size={14} />
+                      <span className="ml-2"><ArrowRight size={14} /></span>
                     </button>
                   </motion.div>
                 )}
@@ -112,14 +117,13 @@ const Navbar = ({ onNavigate }) => {
             onClick={() => onNavigate('user-login')}
             className="flex items-center gap-2 group transition-all"
           >
-            <div className="" />
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80 group-active:text-blue-500 transition-colors">
               {isMalayalam ? 'ലോഗിൻ' : 'student Login'}
             </span>
           </button>
 
           <button 
-            className="relative w-0 h-11 flex flex-col items-center justify-center gap-1.5  rounded-xl border border-transparent z-[210] active:scale-90 transition-all"
+            className="relative w-6 h-11 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-transparent z-[210] active:scale-90 transition-all"
             onClick={() => setIsOpen(!isOpen)}
           >
             <motion.span animate={isOpen ? { rotate: 45, y: 7, width: '22px' } : { rotate: 0, y: 0, width: '18px' }} className="h-0.5 bg-white rounded-full block origin-center transition-all" />
@@ -144,7 +148,6 @@ const Navbar = ({ onNavigate }) => {
               animate={{ scale: 1, opacity: 1 }}
               className="absolute top-8 left-8 flex items-center bg-white/5 border border-white/10 p-1 rounded-2xl backdrop-blur-md"
             >
-              {/* Admin Button */}
               <button
                 onClick={() => { onNavigate('admin-login'); setIsOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 border-r border-white/10 text-slate-400 hover:text-white transition-all"
@@ -153,7 +156,6 @@ const Navbar = ({ onNavigate }) => {
                 <span className="text-[8px] font-black uppercase tracking-widest">Admin</span>
               </button>
 
-              {/* Translate Button */}
               <button
                 onClick={() => setIsMalayalam(!isMalayalam)}
                 className="flex items-center gap-2 px-3 py-2 text-white/80 hover:text-white transition-all"
@@ -166,7 +168,6 @@ const Navbar = ({ onNavigate }) => {
             </motion.div>
 
             <div className="flex-1 space-y-4 mt-8">
-              {/* Note: The separate Malayalam toggle button has been moved to the Dynamic Island */}
               {menuItems.map((item, i) => (
                 <motion.button 
                   key={item.name} 

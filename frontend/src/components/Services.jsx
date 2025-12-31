@@ -1,6 +1,7 @@
 // components/Services.jsx
 import React from 'react';
 import { Monitor, Brain, Users, Info, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const Services = () => {
   const serviceList = [
@@ -38,7 +39,7 @@ const Services = () => {
       <div className="max-w-7xl mx-auto px-6">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+        <div className="flex flex-col lg:flex-row justify-between items-center mb-20 gap-8">
           <div className="max-w-xl text-left">
             <div className="flex items-center gap-2 bg-slate-900 text-white w-fit px-4 py-1.5 rounded-full mb-6">
               <Zap size={14} className="text-yellow-400 fill-yellow-400" />
@@ -47,10 +48,19 @@ const Services = () => {
             <h2 className="text-6xl font-black italic text-slate-900 tracking-tighter uppercase leading-[0.9]">
               Premium <br /> <span className="text-blue-600">Training</span>
             </h2>
+            <p className="text-slate-500 text-sm max-w-xs font-medium border-l-2 border-blue-600 pl-6 italic mt-8">
+              "Beyond simple steering—we build professional driving mindsets."
+            </p>
           </div>
-          <p className="text-slate-500 text-sm max-w-xs font-medium border-l-2 border-blue-600 pl-6 italic">
-            "Beyond simple steering—we build professional driving mindsets."
-          </p>
+
+          {/* INTEGRATED ANIMATION */}
+          <div className="w-full max-w-[300px] lg:max-w-[400px]">
+            <DotLottieReact
+                  src="https://lottie.host/d250e05a-c273-4ffe-9907-ab05fa5daf24/yjcLnidc7E.lottie"
+                  loop
+                  autoplay
+                />
+          </div>
         </div>
 
         {/* Services Grid */}
