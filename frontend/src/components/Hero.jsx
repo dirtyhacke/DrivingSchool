@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+'use client'; // Required in Next.js App Router for hooks and animations
+
+import React, { useRef } from 'react';
 import { ArrowRight, Play, ShieldCheck, MapPin, Sparkles, Star } from 'lucide-react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const Hero = ({ onNavigate }) => {
   const containerRef = useRef(null);
+  
+  // Hook for scroll-linked animations
   const { scrollY } = useScroll();
 
   // Parallax effects for the large background text
@@ -19,7 +23,7 @@ const Hero = ({ onNavigate }) => {
       
       {/* 1. DUAL VIDEO ENGINE BACKGROUND */}
       <div className="absolute inset-0 z-0">
-        {/* DESKTOP VIDEO: Red Car Curve */}
+        {/* DESKTOP VIDEO */}
         <video
           autoPlay
           muted
@@ -30,7 +34,7 @@ const Hero = ({ onNavigate }) => {
           <source src="https://media.istockphoto.com/id/1437677591/video/animation-of-a-red-car-running-around-a-curve-it-runs-forever-without-interruption.mp4?s=mp4-640x640-is&k=20&c=4mMUeuy492Wx_SV0QJMIAcu3YVTs0b7nrnyWDgBfu1g=" type="video/mp4" />
         </video>
 
-        {/* MOBILE VIDEO: Dribbble Motion Background */}
+        {/* MOBILE VIDEO */}
         <video
           autoPlay
           muted
@@ -41,7 +45,7 @@ const Hero = ({ onNavigate }) => {
           <source src="https://cdn.dribbble.com/userupload/42780877/file/original-f947a833159aa73398fc9bfc8468c2d9.mp4" type="video/mp4" />
         </video>
 
-        {/* High-End Cinematic Gradients */}
+        {/* Cinematic Gradients */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#020202] via-[#020202]/90 to-transparent lg:via-[#020202]/70" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-[#020202]/60" />
       </div>
@@ -66,14 +70,14 @@ const Hero = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto px-9 sm:px-12 w-full relative z-10">
         <div className="max-w-4xl">
           
-          {/* MOBILE ONLY LOTTIE ANIMATION AREA */}
+          {/* MOBILE ONLY LOTTIE ANIMATION */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             className="block lg:hidden w-full max-w-[240px] mx-auto mb-6 aspect-square"
           >
             <DotLottieReact
-              src="path/to/animation.lottie" 
+              src="/path/to/animation.lottie" // Ensure your .lottie file is in /public
               loop
               autoplay
             />
@@ -89,7 +93,7 @@ const Hero = ({ onNavigate }) => {
             <span className="text-[10px] sm:text-[11px] font-black text-blue-400 uppercase tracking-[0.3em]">NLP Specialized School</span>
           </motion.div>
 
-          {/* Heading - Fluid Responsive Sizing */}
+          {/* Heading */}
           <motion.h1 
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -110,7 +114,7 @@ const Hero = ({ onNavigate }) => {
             Premium instruction combining <span className="text-white font-bold">Advanced Simulators</span> and <span className="text-blue-500 font-bold">NLP Psychology</span> to build elite road confidence.
           </motion.p>
 
-          {/* Action Buttons */}
+          {/* Buttons */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,7 +137,7 @@ const Hero = ({ onNavigate }) => {
             </button>
           </motion.div>
 
-          {/* Trust Indicators / Stats */}
+          {/* Trust Stats */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -166,7 +170,7 @@ const Hero = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Desktop HUD Signal */}
+      {/* HUD Signal */}
       <div className="absolute bottom-10 right-10 hidden lg:flex items-center gap-4">
          <div className="text-right">
             <p className="text-[8px] font-black text-blue-500 uppercase tracking-[0.3em]">System.Active</p>

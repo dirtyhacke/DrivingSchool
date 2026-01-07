@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar, LogOut, ShieldCheck, ChevronRight, CreditCard, LayoutGrid } from 'lucide-react';
+import { Users, Calendar, LogOut, ShieldCheck, ChevronRight, CreditCard, LayoutGrid, Database } from 'lucide-react';
 
 const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => {
   if (isHajerBookOpen) return null;
@@ -10,6 +10,7 @@ const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => 
     { id: 'scheduler', label: 'Scheduler', icon: <Calendar size={20} /> },
     { id: 'slots', label: 'Slots', icon: <LayoutGrid size={20} /> },
     { id: 'payments', label: 'Payments', icon: <CreditCard size={20} /> },
+    { id: 'studen-datas', label: 'Studenfulldata', icon: <Database size={20} /> },
   ];
 
   return (
@@ -20,7 +21,7 @@ const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => 
       left-0 bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-xl border-t border-white/10 p-2 pb-6 lg:pb-6 flex flex-row lg:block 
       shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
       
-      {/* --- DESKTOP LOGO (Hidden on Mobile) --- */}
+      {/* --- DESKTOP LOGO --- */}
       <div className="hidden lg:flex items-center gap-3 mb-12 px-2">
         <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
           <ShieldCheck size={24} className="text-white" />
@@ -44,7 +45,6 @@ const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => 
                 : 'text-slate-400 hover:text-white lg:hover:bg-white/5'
             }`}
           >
-            {/* Mobile Active Indicator Dot */}
             {activeTab === item.id && (
               <div className="lg:hidden absolute -top-2 w-1 h-1 bg-blue-50 rounded-full shadow-[0_0_8px_blue]" />
             )}
@@ -62,7 +62,6 @@ const AdminNavbar = ({ activeTab, setActiveTab, onLogout, isHajerBookOpen }) => 
           </button>
         ))}
 
-        {/* --- MOBILE LOGOUT (Hidden on Desktop) --- */}
         <button 
           onClick={onLogout}
           className="lg:hidden flex flex-col items-center gap-1 p-3 text-red-500/50 hover:text-red-500 transition-colors"

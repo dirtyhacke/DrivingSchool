@@ -56,7 +56,7 @@ const Services = () => {
           {/* INTEGRATED ANIMATION */}
           <div className="w-full max-w-[300px] lg:max-w-[400px]">
             <DotLottieReact
-                  src="https://lottie.host/d250e05a-c273-4ffe-9907-ab05fa5daf24/yjcLnidc7E.lottie"
+                  src="https://lottie.host/9c713b8f-3f49-407a-a5f9-2a8fbc597e22/rRHHw7wZ6p.lottie"
                   loop
                   autoplay
                 />

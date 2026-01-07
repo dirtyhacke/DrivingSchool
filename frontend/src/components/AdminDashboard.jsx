@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Users, Calendar, Wallet, LogOut, ShieldCheck, LayoutGrid } from 'lucide-react'; 
+import { Users, Calendar, Wallet, LogOut, ShieldCheck, LayoutGrid, Database } from 'lucide-react'; 
 import AdminNavbar from './AdminNavbar';
 import UsersRegistry from './UsersRegistry'; 
 import UserDetailsView from './UserDetailsView';
 import Scheduler from './Scheduler';
 import Payments from './Payments';
-import Slots from './Slots'; // 1. IMPORT SLOTS
+import Slots from './Slots';
+import StudentDatas from '../pages/StudentDatas'; // 1. IMPORT STUDENT DATAS
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('userdetails');
@@ -15,8 +16,9 @@ const AdminDashboard = ({ onLogout }) => {
       case 'users': return 'Student Registry';
       case 'userdetails': return 'Master Ledger';
       case 'scheduler': return 'Operations Scheduler';
-      case 'slots': return 'Slot Management'; // 2. ADD HEADER TITLE
+      case 'slots': return 'Slot Management';
       case 'payments': return 'Financial Ledger';
+      case 'studen-datas': return 'Full Data Archive'; // 2. ADD HEADER TITLE
       default: return 'Management Console';
     }
   };
@@ -61,8 +63,9 @@ const AdminDashboard = ({ onLogout }) => {
             {activeTab === 'users' && <UsersRegistry />}
             {activeTab === 'userdetails' && <UserDetailsView />}
             {activeTab === 'scheduler' && <Scheduler />}
-            {activeTab === 'slots' && <Slots />} {/* 3. RENDER SLOTS COMPONENT */}
+            {activeTab === 'slots' && <Slots />}
             {activeTab === 'payments' && <Payments darkMode={true} />}
+            {activeTab === 'studen-datas' && <StudentDatas />} {/* 3. RENDER NEW COMPONENT */}
           </div>
         </div>
       </main>
@@ -86,18 +89,18 @@ const AdminDashboard = ({ onLogout }) => {
           />
           
           <MobileNavBtn 
-            icon={<Calendar size={20} />} 
-            label="Schedule" 
-            active={activeTab === 'scheduler'} 
-            onClick={() => setActiveTab('scheduler')} 
-          />
-
-          {/* 4. ADD SLOTS TO MOBILE NAV */}
-          <MobileNavBtn 
             icon={<LayoutGrid size={20} />} 
             label="Slots" 
             active={activeTab === 'slots'} 
             onClick={() => setActiveTab('slots')} 
+          />
+
+          {/* 4. ADD DATA TO MOBILE NAV */}
+          <MobileNavBtn 
+            icon={<Database size={20} />} 
+            label="Data" 
+            active={activeTab === 'studen-datas'} 
+            onClick={() => setActiveTab('studen-datas')} 
           />
           
           <MobileNavBtn 
@@ -117,16 +120,16 @@ const AdminDashboard = ({ onLogout }) => {
 const MobileNavBtn = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center justify-center py-3 px-4 rounded-[1.5rem] transition-all duration-500 ${
+    className={`flex flex-col items-center justify-center py-3 px-2 rounded-[1.5rem] transition-all duration-500 ${
       active 
       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105' 
-      : 'text-slate-500 hover:text-slate-200'
+      : 'text-slate-400 hover:text-slate-200'
     }`}
   >
     <div className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100'}`}>
       {icon}
     </div>
-    <span className={`text-[7px] font-black uppercase mt-1 tracking-tighter ${active ? 'block animate-in fade-in slide-in-from-top-1' : 'hidden'}`}>
+    <span className={`text-[7px] font-black uppercase mt-1 tracking-tighter ${active ? 'block animate-in fade-in' : 'hidden'}`}>
       {label}
     </span>
   </button>

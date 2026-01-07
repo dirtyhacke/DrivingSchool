@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { User, Lock, Mail, Loader2, ArrowLeft, Car, Phone, MapPin, Home, Camera, UserCircle, Navigation } from 'lucide-react';
+import { User, Lock, Mail, Loader2, ArrowLeft, Car, Phone, MapPin, Home, Camera, UserCircle, Navigation, Calendar } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserDashboard from './UserDashboard';
@@ -47,7 +47,8 @@ const UserLogin = ({ onBack }) => {
     fullName: '',
     phoneNumber: '',
     address: '',
-    location: ''
+    location: '',
+    dob: '' // Added dob field
   });
 
   const toastStyle = {
@@ -64,7 +65,6 @@ const UserLogin = ({ onBack }) => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Using OpenStreetMap's Nominatim (Free Reverse Geocoding)
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
@@ -197,6 +197,10 @@ const UserLogin = ({ onBack }) => {
 
             {!isLogin && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                {/* NEW DOB FIELD */}
+                <FloatingInput id="dob" icon={Calendar} label="Date of Birth" type="date" required
+                  value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} />
+
                 <FloatingInput id="phone" icon={Phone} label="Phone Number" type="tel" required
                   value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} />
                 

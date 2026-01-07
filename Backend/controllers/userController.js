@@ -29,8 +29,9 @@ const sendAdminAlert = async (newUser, profileData, imageUrl) => {
             subject: `🚀 New Student Joined: ${newUser.fullName}`,
             html: `
                 <h3>New Student Registered</h3>
-                <img src="${imageUrl}" width="100"/>
+                <img src="${imageUrl}" width="100" style="border-radius: 50%"/>
                 <p><b>Name:</b> ${newUser.fullName}</p>
+                <p><b>DOB:</b> ${profileData.dob}</p>
                 <p><b>Email:</b> ${newUser.email}</p>
                 <p><b>Phone:</b> ${profileData.phoneNumber}</p>
                 <p><b>Location:</b> ${profileData.location}</p>
@@ -44,7 +45,7 @@ const sendAdminAlert = async (newUser, profileData, imageUrl) => {
 };
 
 /* ====================================================
-   🔐 SIGNUP — FULLY LOCKED (NO BYPASS POSSIBLE)
+   🔐 SIGNUP — UPDATED WITH DOB
 ==================================================== */
 export const signup = async (req, res) => {
 
@@ -53,6 +54,7 @@ export const signup = async (req, res) => {
         email,
         password,
         phoneNumber,
+        dob, // Added DOB
         address,
         location,
         profileImage
@@ -64,13 +66,14 @@ export const signup = async (req, res) => {
         !email?.trim() ||
         !password?.trim() ||
         !phoneNumber?.trim() ||
+        !dob?.trim() || // Validate DOB
         !address?.trim() ||
         !location?.trim() ||
         !profileImage
     ) {
         return res.status(400).json({
             success: false,
-            message: "ALL fields including profile photo are mandatory"
+            message: "ALL fields including DOB and profile photo are mandatory"
         });
     }
 
@@ -125,6 +128,7 @@ export const signup = async (req, res) => {
         const newProfile = await Profile.create({
             userId: newUser._id,
             phoneNumber,
+            dob, // Added DOB
             address,
             location,
             profileImage: imageUrl
@@ -142,7 +146,7 @@ export const signup = async (req, res) => {
         });
 
         /* ---------- ADMIN ALERT ---------- */
-        sendAdminAlert(newUser, { phoneNumber, address, location }, imageUrl);
+        sendAdminAlert(newUser, { phoneNumber, address, location, dob }, imageUrl);
 
         res.status(201).json({
             success: true,

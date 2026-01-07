@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User, Award, Settings, LogOut, Car, Sun, Moon, ChevronRight, Wallet, LayoutGrid } from 'lucide-react';
+import { User, Award, Settings, LogOut, Car, Sun, Moon, ChevronRight, Wallet, LayoutGrid, Database } from 'lucide-react';
 import UserSettings from './UserSettings';
 import TrainingCenter from './TrainingCenter';
 import UserPayment from './UserPayment';
-import TodaySlots from './TodaySlots'; // Import the new component
+import TodaySlots from './TodaySlots';
+import MyAllData from './MyAllData'; // Import the new component
 
 const UserDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('training');
@@ -26,9 +27,10 @@ const UserDashboard = ({ user, onLogout }) => {
 
         <nav className="flex-1 space-y-2">
           <SidebarBtn icon={<Award size={20}/>} label="Training" active={activeTab === 'training'} onClick={() => setActiveTab('training')} darkMode={darkMode} />
-          {/* NEW OPTION ADDED HERE */}
           <SidebarBtn icon={<LayoutGrid size={20}/>} label="Today Slots" active={activeTab === 'slots'} onClick={() => setActiveTab('slots')} darkMode={darkMode} />
           <SidebarBtn icon={<Wallet size={20}/>} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} darkMode={darkMode} />
+          {/* NEW: My All Data Navigation Button */}
+          <SidebarBtn icon={<Database size={20}/>} label="My All Data" active={activeTab === 'alldata'} onClick={() => setActiveTab('alldata')} darkMode={darkMode} />
           <SidebarBtn icon={<Settings size={20}/>} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} darkMode={darkMode} />
         </nav>
 
@@ -57,7 +59,13 @@ const UserDashboard = ({ user, onLogout }) => {
         <header className={`p-6 lg:p-10 flex justify-between items-center sticky top-0 z-30 backdrop-blur-md ${darkMode ? 'bg-[#020617]/80' : 'bg-slate-50/80'}`}>
           <div className="flex items-center gap-4">
              <div className="lg:hidden bg-blue-600 p-2 rounded-lg text-white"><Car size={18} /></div>
-             <h2 className="text-2xl font-black italic uppercase tracking-tighter">{activeTab.replace('slots', 'Schedule')}</h2>
+             <h2 className="text-2xl font-black italic uppercase tracking-tighter">
+               {activeTab === 'training' ? 'Training Center' : 
+                activeTab === 'slots' ? 'Today Schedule' : 
+                activeTab === 'payments' ? 'Payment History' : 
+                activeTab === 'alldata' ? 'My Complete Data' : 
+                activeTab === 'settings' ? 'Settings' : ''}
+             </h2>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden lg:block text-right">
@@ -75,9 +83,10 @@ const UserDashboard = ({ user, onLogout }) => {
 
         <div className="p-6 lg:p-10 max-w-5xl mx-auto">
           {activeTab === 'training' && (userId ? <TrainingCenter darkMode={darkMode} userId={userId} /> : <SessionError />)}
-          {/* LOAD THE COMPONENT HERE */}
           {activeTab === 'slots' && <TodaySlots darkMode={darkMode} />}
           {activeTab === 'payments' && (userId ? <UserPayment darkMode={darkMode} userId={userId} /> : <SessionError />)}
+          {/* NEW: My All Data Component */}
+          {activeTab === 'alldata' && (userId ? <MyAllData darkMode={darkMode} userId={userId} /> : <SessionError />)}
           {activeTab === 'settings' && <UserSettings user={user} onLogout={onLogout} darkMode={darkMode} />}
         </div>
       </main>
@@ -87,7 +96,7 @@ const UserDashboard = ({ user, onLogout }) => {
         <MobileBtn icon={<Award size={22}/>} active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
         <MobileBtn icon={<LayoutGrid size={22}/>} active={activeTab === 'slots'} onClick={() => setActiveTab('slots')} />
         <MobileBtn icon={<Wallet size={22}/>} active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
-        <MobileBtn icon={<Settings size={22}/>} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        <MobileBtn icon={<Database size={22}/>} active={activeTab === 'alldata'} onClick={() => setActiveTab('alldata')} />
         <button onClick={onLogout} className="p-4 text-red-500/50"><LogOut size={22}/></button>
       </nav>
     </div>

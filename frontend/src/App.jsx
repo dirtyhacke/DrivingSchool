@@ -1,9 +1,9 @@
-// App.jsx
 import React, { useState } from 'react';
 import Home from './pages/Home';
 import UserLogin from './components/UserLogin';
 import AdminLogin from './components/AdminLogin';
-import MVahanPortal from './components/MVahanPortal'; // 1. Import the new component
+import MVahanPortal from './components/MVahanPortal';
+import StudentDatas from './pages/StudentDatas'; // Import the new page
 import { Toaster } from 'react-hot-toast';
 
 const App = () => {
@@ -18,9 +18,14 @@ const App = () => {
         <Home onNavigate={(target) => setView(target)} />
       )}
       
-      {/* 2. ADD THIS: Show mVahan Portal */}
+      {/* Show mVahan Portal */}
       {view === 'mvahan' && (
         <MVahanPortal onBack={() => setView('home')} />
+      )}
+
+      {/* Show Student Full Data Page */}
+      {view === 'studen-datas' && (
+        <StudentDatas onBack={() => setView('home')} />
       )}
       
       {/* Show User Login Page */}
