@@ -16,6 +16,21 @@ const StudentDatas = () => {
   // Skeleton loading array
   const skeletonStudents = Array(5).fill({});
 
+  // Helper function to format date to YYYY-MM-DD
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return '';
+    }
+  };
+
   // Memoize fetch function
   const fetchData = useCallback(async () => {
     try {
@@ -40,7 +55,7 @@ const StudentDatas = () => {
           const sessions = Array.isArray(item.sessions) ? item.sessions.map(session => {
             return {
               _id: session._id,
-              date: session.date ? new Date(session.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              date: session.date ? formatDateForInput(session.date) : new Date().toISOString().split('T')[0],
               ground: Number(session.ground) || 0,
               simulation: Number(session.simulation) || 0,
               road: Number(session.road) || 0,
@@ -53,7 +68,7 @@ const StudentDatas = () => {
             id: item._id,
             studentName: item.fullName || '',
             phone: item.phoneNumber || '',
-            dob: item.dob || "2000-01-01",
+            dob: item.dob ? formatDateForInput(item.dob) : "2000-01-01",
             
             // Registry info (from StudentRegistry model)
             registryId: item.registryId || null,
@@ -61,17 +76,17 @@ const StudentDatas = () => {
             category: item.vehicleCategory || "four-wheeler",
             
             // Test dates and validity (from StudentRegistry model)
-            llDate: item.llDate || "",
-            dlDate: item.dlDate || "",
-            validity: item.validity || "",
+            llDate: formatDateForInput(item.llDate),
+            dlDate: formatDateForInput(item.dlDate),
+            validity: formatDateForInput(item.validity),
             
             // Sessions (from StudentRegistry model)
             sessions: sessions,
             
             // Financials (from Payment model - display only)
             feePaid: Number(item.paidAmount) || 0,
-            balance: Number(item.remainingAmount) || 0,
             totalFee: (Number(item.paidAmount) || 0) + (Number(item.remainingAmount) || 0),
+            balance: Number(item.remainingAmount) || 0,
             
             // Stats (from StudentRegistry model)
             attendanceStats: item.attendanceStats || {},
@@ -150,11 +165,11 @@ const StudentDatas = () => {
           updatedAt: new Date().toISOString()
         };
         
-        // Auto-update total fee if feePaid or balance changes
-        if (field === 'feePaid' || field === 'balance') {
+        // Auto-update balance when totalFee or feePaid changes
+        if (field === 'totalFee' || field === 'feePaid') {
+          const total = field === 'totalFee' ? Number(value) : s.totalFee;
           const paid = field === 'feePaid' ? Number(value) : s.feePaid;
-          const balance = field === 'balance' ? Number(value) : s.balance;
-          updated.totalFee = paid + balance;
+          updated.balance = Math.max(0, total - paid);
         }
         
         return updated;
@@ -213,7 +228,7 @@ const StudentDatas = () => {
     ));
   };
 
-  // ✅ FIXED: Save all student data
+  // ✅ FIXED: Save all student data with proper date handling
   const handleSave = async (student) => {
     setSavingStudents(prev => ({ ...prev, [student.id]: true }));
     
@@ -230,7 +245,7 @@ const StudentDatas = () => {
         dlDate: student.dlDate || null,
         validity: student.validity || null,
         feePaid: Number(student.feePaid) || 0,
-        balance: Number(student.balance) || 0,
+        balance: student.balance || 0,
         category: student.category,
         sessions: student.sessions.map(session => ({
           date: session.date,
@@ -313,7 +328,7 @@ const StudentDatas = () => {
     const headers = [
       'Student Name', 'Application Number', 'Phone', 'DOB',
       'Category', 'Total Fee', 'Fee Paid', 'Balance',
-      'LL Date', 'DL Date', 'Validity', 'Sessions Count',
+      'LL Date', 'DL Date', 'LL Validity', 'Sessions Count',
       'Status', 'Total Ground', 'Total Simulation', 'Total Road'
     ];
     
@@ -558,7 +573,7 @@ const StudentDatas = () => {
                 <th className="p-3 border-r border-white/10 text-center min-w-[120px]">
                   <div className="flex items-center justify-center gap-1">
                     <Calendar size={10} />
-                    <span>Validity</span>
+                    <span>LL Validity</span>
                   </div>
                 </th>
                 <th className="p-3 border-r border-white/10 text-center min-w-[140px]">
@@ -800,10 +815,10 @@ const StudentDatas = () => {
                       </div>
                     </td>
 
-                    {/* Validity (StudentRegistry Model) */}
+                    {/* LL Validity (StudentRegistry Model) */}
                     <td className="p-3 border-r border-white/10 min-w-[120px]">
                       <div className="flex flex-col items-center justify-center h-full">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold mb-2">Valid Until</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold mb-2">LL Valid Until</div>
                         <input
                           type="date"
                           value={student.validity}
@@ -813,31 +828,49 @@ const StudentDatas = () => {
                       </div>
                     </td>
 
-                    {/* Financials (Payment Model - Display Only) */}
+                    {/* Financials (Payment Model) - Only Total Fee and Paid Amount inputs */}
                     <td className="p-3 border-r border-white/10 min-w-[140px]">
                       <div className="space-y-3">
                         <div className="text-center">
                           <div className="text-[8px] text-slate-500 uppercase font-bold">TOTAL FEE</div>
-                          <div className="text-sm font-bold text-slate-300">₹{student.totalFee}</div>
+                          <input
+                            type="number"
+                            value={student.totalFee}
+                            onChange={(e) => handleRegistryInfoChange(student.id, 'totalFee', e.target.value)}
+                            className="w-full bg-cyan-500/10 p-1.5 rounded text-xs text-center text-cyan-400 font-bold outline-none border border-transparent focus:border-cyan-500/30"
+                            min="0"
+                          />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           <div>
-                            <div className="text-[8px] text-emerald-500 uppercase font-bold">PAID</div>
+                            <div className="text-[8px] text-emerald-500 uppercase font-bold">PAID AMOUNT</div>
                             <input
                               type="number"
                               value={student.feePaid}
                               onChange={(e) => handleRegistryInfoChange(student.id, 'feePaid', e.target.value)}
                               className="w-full bg-emerald-500/10 p-1.5 rounded text-xs text-center text-emerald-500 font-bold outline-none border border-transparent focus:border-emerald-500/30"
+                              min="0"
+                              max={student.totalFee}
                             />
                           </div>
                           <div>
                             <div className="text-[8px] text-red-500 uppercase font-bold">BALANCE</div>
-                            <input
-                              type="number"
-                              value={student.balance}
-                              onChange={(e) => handleRegistryInfoChange(student.id, 'balance', e.target.value)}
-                              className="w-full bg-red-500/10 p-1.5 rounded text-xs text-center text-red-500 font-bold outline-none border border-transparent focus:border-red-500/30"
-                            />
+                            <div className="w-full bg-red-500/10 p-1.5 rounded text-xs text-center text-red-500 font-bold border border-red-500/20">
+                              ₹{student.balance}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Status indicator */}
+                        <div className="text-center">
+                          <div className="text-[7px] uppercase font-bold mb-1">Payment Status</div>
+                          <div className={`text-[9px] font-bold px-2 py-1 rounded ${
+                            student.balance === 0 
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : student.feePaid === 0
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          }`}>
+                            {student.balance === 0 ? 'COMPLETED' : student.feePaid === 0 ? 'PENDING' : 'PARTIAL'}
                           </div>
                         </div>
                       </div>

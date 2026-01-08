@@ -3,12 +3,13 @@ import {
   Database, Calendar, Car, CreditCard, User, Phone, FileText, Award, 
   Clock, Download, RefreshCw, ChevronRight, AlertCircle, CheckCircle, 
   XCircle, Lock, Shield, Eye, Copy, Clipboard, BookOpen, MapPin, 
-  Mail, Hash, BadgeCheck, Tag, LogOut
+  Mail, Hash, BadgeCheck, Tag, LogOut, QrCode, IndianRupee, Smartphone, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MyAllData = ({ darkMode, userId, onLogout }) => {
   const [studentData, setStudentData] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('personal');
   const [copiedField, setCopiedField] = useState(null);
@@ -28,10 +29,9 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
       const adminView = localStorage.getItem('admin_view_mode');
       setViewingAsAdmin(!!adminView);
       
-      // NEW: Fetch ONLY current user's data from the StudentDatas backend
       console.log('Fetching data for user:', userId);
       
-      // Option 1: Use the existing full registry endpoint with filtering
+      // Fetch student data
       const response = await fetch('http://localhost:8080/api/students/full-registry');
       
       if (!response.ok) {
@@ -53,7 +53,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
           const singleData = await singleResponse.json();
           setStudentData(singleData);
         } else {
-          // Create mock data structure based on backend schema
+          // Create mock data structure
           setStudentData({
             _id: userId,
             fullName: 'Current User',
@@ -76,14 +76,14 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
           toast.info('Using placeholder data - no registry found');
         }
       } else {
-        // Format the data to match MyAllData component expectations
+        // Format the data to match component expectations
         const formattedData = {
           // Personal info
           _id: currentUserData._id,
           fullName: currentUserData.fullName || 'Not provided',
           phoneNumber: currentUserData.phoneNumber || '',
           dob: currentUserData.dob || '',
-          email: currentUserData.email || '', // Add if available
+          email: currentUserData.email || '',
           
           // Registry info
           appNumber: currentUserData.appNumber || '',
@@ -122,6 +122,10 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
         };
         
         setStudentData(formattedData);
+        
+        // Now fetch payment info separately to get UPI details
+        await fetchPaymentInfo(userId, formattedData.fullName);
+        
         toast.success('Your data loaded successfully!');
       }
       
@@ -130,6 +134,35 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
       toast.error('Failed to load your data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPaymentInfo = async (userId, studentName) => {
+    try {
+      // Fetch payment info for this user
+      const paymentResponse = await fetch(`http://localhost:8080/api/payments/user/${userId}`);
+      
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        setPaymentInfo(paymentData);
+      } else {
+        // If no payment record exists, create default payment info
+        setPaymentInfo({
+          adminUpiId: 'example@upi',
+          adminPhone: '+91 9876543210',
+          adminQrCode: null, // You would have a default QR code URL here
+          lastPaymentDate: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching payment info:', error);
+      // Set default payment info
+      setPaymentInfo({
+        adminUpiId: 'drivingschool@upi',
+        adminPhone: '+91 9876543210',
+        adminQrCode: null,
+        lastPaymentDate: new Date()
+      });
     }
   };
 
@@ -160,7 +193,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
       });
   };
 
-  // NEW: Function to simulate admin view (for testing)
+  // Function to simulate admin view (for testing)
   const toggleAdminView = () => {
     if (viewingAsAdmin) {
       localStorage.removeItem('admin_view_mode');
@@ -174,7 +207,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
     fetchUserData();
   };
 
-  // NEW: Calculate attendance stats from sessions
+  // Calculate attendance stats from sessions
   const calculateAttendanceStats = () => {
     if (!studentData || !studentData.sessions) {
       return { totalGroundSessions: 0, totalSimulationSessions: 0, totalRoadSessions: 0, totalSessions: 0 };
@@ -189,6 +222,33 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
     }, { totalGroundSessions: 0, totalSimulationSessions: 0, totalRoadSessions: 0, totalSessions: 0 });
     
     return stats;
+  };
+
+  // Function to open UPI payment
+  const openUpiPayment = () => {
+    if (!paymentInfo || !paymentInfo.adminUpiId) {
+      toast.error('UPI ID not available');
+      return;
+    }
+    
+    const upiId = paymentInfo.adminUpiId;
+    const amount = studentData?.remainingAmount || 0;
+    const studentName = studentData?.fullName || 'Student';
+    
+    // Create UPI payment URL
+    const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Driving School')}&am=${amount}&cu=INR&tn=${encodeURIComponent(`Payment for ${studentName}`)}`;
+    
+    // Try to open UPI app
+    window.location.href = upiUrl;
+    
+    // Fallback: Copy UPI ID to clipboard
+    navigator.clipboard.writeText(upiId)
+      .then(() => {
+        toast.success(`UPI ID copied! Open your UPI app and paste: ${upiId}`);
+      })
+      .catch(() => {
+        toast.info(`UPI ID: ${upiId}. Please open your UPI app manually.`);
+      });
   };
 
   if (loading) {
@@ -676,6 +736,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
               </div>
             </div>
             
+            {/* Financial Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FinancialCard 
                 title="Total Course Fee" 
@@ -719,6 +780,114 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
                 <span>₹{(studentData.totalFee || 0).toLocaleString('en-IN')}</span>
               </div>
             </div>
+            
+            {/* Payment Options Section */}
+            {studentData.remainingAmount > 0 && paymentInfo && (
+              <div className={`p-6 rounded-2xl ${darkMode ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'}`}>
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <IndianRupee className="text-emerald-500" size={20} />
+                  Make Payment
+                </h4>
+                <p className="text-sm opacity-70 mb-4">
+                  Pay your balance of <span className="font-bold text-emerald-500">₹{studentData.remainingAmount.toLocaleString('en-IN')}</span> using any of the methods below:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* UPI Payment Option */}
+                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-emerald-500/20`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Smartphone className="text-emerald-500" size={20} />
+                      <div>
+                        <h5 className="font-bold">UPI Payment</h5>
+                        <p className="text-sm opacity-60">Instant payment via UPI</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs uppercase font-bold mb-1 text-emerald-500">UPI ID</div>
+                        <div className="flex items-center justify-between p-3 bg-emerald-500/10 rounded-lg">
+                          <code className="font-mono text-sm font-bold">{paymentInfo.adminUpiId || 'drivingschool@upi'}</code>
+                          <button
+                            onClick={() => handleCopyToClipboard(paymentInfo.adminUpiId, 'UPI ID')}
+                            className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                            title="Copy UPI ID"
+                          >
+                            <Copy size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={openUpiPayment}
+                        className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <ExternalLink size={16} />
+                        Pay Now via UPI
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* QR Code Option */}
+                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-blue-500/20`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <QrCode className="text-blue-500" size={20} />
+                      <div>
+                        <h5 className="font-bold">Scan QR Code</h5>
+                        <p className="text-sm opacity-60">Scan with any UPI app</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {paymentInfo.adminQrCode ? (
+                        <div className="flex justify-center">
+                          <img 
+                            src={paymentInfo.adminQrCode} 
+                            alt="UPI QR Code" 
+                            className="w-48 h-48 object-contain border border-white/10 rounded-lg"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <QrCode className="mx-auto mb-3 text-blue-500 opacity-40" size={48} />
+                          <p className="text-sm opacity-60">QR Code will be displayed here</p>
+                          <p className="text-xs opacity-40">Contact admin for QR code</p>
+                        </div>
+                      )}
+                      
+                      <div className="text-center">
+                        <p className="text-xs opacity-60">Scan to pay ₹{studentData.remainingAmount.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Phone Payment Option */}
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Phone className="text-purple-500" size={20} />
+                    <div>
+                      <h5 className="font-bold">Phone Payment</h5>
+                      <p className="text-sm opacity-60">Contact admin for phone payment</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 bg-purple-500/10 rounded-xl">
+                    <div>
+                      <div className="text-xs uppercase font-bold mb-1 text-purple-500">Admin Phone</div>
+                      <div className="text-lg font-bold">{paymentInfo.adminPhone || '+91 9876543210'}</div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyToClipboard(paymentInfo.adminPhone, 'Admin Phone')}
+                      className="p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
+                      title="Copy Phone Number"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Payment Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -13,19 +13,19 @@ const attendanceSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0,
-    max: 10
+    max: 40
   },
   simulation: {
     type: Number,
     default: 0,
     min: 0,
-    max: 10
+    max: 40
   },
   road: {
     type: Number,
     default: 0,
     min: 0,
-    max: 10
+    max: 40
   },
   vehicleType: {
     type: String,
