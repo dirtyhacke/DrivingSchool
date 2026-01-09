@@ -6,7 +6,7 @@ import UserDetailsView from './UserDetailsView';
 import Scheduler from './Scheduler';
 import Payments from './Payments';
 import Slots from './Slots';
-import StudentDatas from '../pages/StudentDatas'; // 1. IMPORT STUDENT DATAS
+import StudentDatas from '../pages/StudentDatas';
 
 const AdminDashboard = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('userdetails');
@@ -18,13 +18,13 @@ const AdminDashboard = ({ onLogout }) => {
       case 'scheduler': return 'Operations Scheduler';
       case 'slots': return 'Slot Management';
       case 'payments': return 'Financial Ledger';
-      case 'studen-datas': return 'Full Data Archive'; // 2. ADD HEADER TITLE
+      case 'studen-datas': return 'Full Data Archive';
       default: return 'Management Console';
     }
   };
 
   return (
-    <div className="flex bg-[#020617] min-h-screen text-white font-sans">
+    <div className="flex bg-gray-50 min-h-screen text-gray-900 font-sans">
       
       {/* --- SIDEBAR (Desktop Only) --- */}
       <div className="hidden lg:block">
@@ -42,37 +42,37 @@ const AdminDashboard = ({ onLogout }) => {
           {/* Header Section */}
           <div className="mb-6 md:mb-10 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">
+              <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter text-gray-900">
                 {getHeaderTitle()}
               </h1>
-              <p className="text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] mt-1 md:mt-2">
+              <p className="text-gray-600 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.4em] mt-1 md:mt-2">
                 System / {activeTab}
               </p>
             </div>
             
             <button 
               onClick={onLogout}
-              className="lg:hidden p-3 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20 active:scale-95 transition-transform"
+              className="lg:hidden p-3 bg-red-50 text-red-600 rounded-2xl border border-red-200 active:scale-95 transition-transform hover:bg-red-100"
             >
               <LogOut size={20} />
             </button>
           </div>
 
           {/* Screen Content Wrapper */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden min-h-[600px] shadow-2xl">
+          <div className="bg-white border border-gray-200 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden min-h-[600px] shadow-lg shadow-gray-200">
             {activeTab === 'users' && <UsersRegistry />}
             {activeTab === 'userdetails' && <UserDetailsView />}
             {activeTab === 'scheduler' && <Scheduler />}
             {activeTab === 'slots' && <Slots />}
-            {activeTab === 'payments' && <Payments darkMode={true} />}
-            {activeTab === 'studen-datas' && <StudentDatas />} {/* 3. RENDER NEW COMPONENT */}
+            {activeTab === 'payments' && <Payments darkMode={false} />}
+            {activeTab === 'studen-datas' && <StudentDatas />}
           </div>
         </div>
       </main>
 
       {/* --- MOBILE BOTTOM NAVIGATION --- */}
       <nav className="lg:hidden fixed bottom-6 left-4 right-4 z-[500]">
-        <div className="bg-[#0f172a]/90 backdrop-blur-2xl border border-white/10 p-2 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-around">
+        <div className="bg-white/95 backdrop-blur-2xl border border-gray-200 p-2 rounded-[2.5rem] shadow-lg shadow-gray-300 flex items-center justify-around">
           
           <MobileNavBtn 
             icon={<Users size={20} />} 
@@ -95,7 +95,6 @@ const AdminDashboard = ({ onLogout }) => {
             onClick={() => setActiveTab('slots')} 
           />
 
-          {/* 4. ADD DATA TO MOBILE NAV */}
           <MobileNavBtn 
             icon={<Database size={20} />} 
             label="Data" 
@@ -122,8 +121,8 @@ const MobileNavBtn = ({ icon, label, active, onClick }) => (
     onClick={onClick}
     className={`flex flex-col items-center justify-center py-3 px-2 rounded-[1.5rem] transition-all duration-500 ${
       active 
-      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 scale-105' 
-      : 'text-slate-400 hover:text-slate-200'
+      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105' 
+      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
     }`}
   >
     <div className={`transition-transform duration-300 ${active ? 'scale-110' : 'scale-100'}`}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Database, Trash2, Save, RefreshCw, PlusCircle, Car, Bike, X, Download, Search, Clock, User, Phone, Calendar, CreditCard, FileText } from 'lucide-react';
+import { Database, Trash2, Save, RefreshCw, PlusCircle, Car, Bike, X, Download, Search, Clock, User, Phone, Calendar, CreditCard, FileText, Monitor, Smartphone, Filter, SortAsc, SortDesc } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StudentDatas = () => {
@@ -9,12 +9,33 @@ const StudentDatas = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [bulkSelect, setBulkSelect] = useState([]);
   const [savingStudents, setSavingStudents] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+  const [dateSearchType, setDateSearchType] = useState('all'); // 'all', 'll', 'dl', 'validity'
+  const [dateSearchValue, setDateSearchValue] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Sync these exactly with your DB Enum/Schema
   const categories = ["four-wheeler", "two-wheeler", "heavy-vehicle", "finished"];
 
   // Skeleton loading array
   const skeletonStudents = Array(5).fill({});
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
+        setShowMobileWarning(true);
+      }
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Helper function to format date to YYYY-MM-DD
   const formatDateForInput = (dateString) => {
@@ -37,7 +58,7 @@ const StudentDatas = () => {
       setLoading(true);
       
       console.log('Fetching data from API...');
-      const response = await fetch('http://localhost:8080/api/students/full-registry');
+      const response = await fetch('https://drivingschool-9b6b.onrender.com/api/students/full-registry');
       
       if (!response.ok) {
         console.error('API response not OK:', response.status, response.statusText);
@@ -129,8 +150,32 @@ const StudentDatas = () => {
     fetchData();
   };
 
+  // Sorting function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Sort students based on configuration
+  const getSortedStudents = (studentsToSort) => {
+    if (!sortConfig.key) return studentsToSort;
+
+    return [...studentsToSort].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
   // Filter students
-  const filteredStudents = students.filter(student => {
+  const filteredStudents = getSortedStudents(students.filter(student => {
     const matchesSearch = 
       student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.applicationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,8 +183,32 @@ const StudentDatas = () => {
     
     const matchesCategory = selectedCategory === 'all' || student.category === selectedCategory;
     
-    return matchesSearch && matchesCategory;
-  });
+    // Date search logic
+    let matchesDate = true;
+    if (dateSearchValue) {
+      const searchDate = formatDateForInput(dateSearchValue);
+      switch (dateSearchType) {
+        case 'll':
+          matchesDate = student.llDate === searchDate;
+          break;
+        case 'dl':
+          matchesDate = student.dlDate === searchDate;
+          break;
+        case 'validity':
+          matchesDate = student.validity === searchDate;
+          break;
+        case 'all':
+          matchesDate = student.llDate === searchDate || 
+                       student.dlDate === searchDate || 
+                       student.validity === searchDate;
+          break;
+        default:
+          matchesDate = true;
+      }
+    }
+    
+    return matchesSearch && matchesCategory && matchesDate;
+  }));
 
   // Handle personal info changes (User/Profile models)
   const handlePersonalInfoChange = (id, field, value) => {
@@ -402,8 +471,91 @@ const StudentDatas = () => {
 
   const stats = calculateStats();
 
+  // Mobile Warning Modal
+  const MobileWarningModal = () => (
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+      <div className="bg-[#1e293b] border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-red-500/20 p-2 rounded-lg">
+            <Smartphone className="text-red-500" size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Mobile Device Detected</h3>
+            <p className="text-sm text-slate-400">Limited functionality on mobile</p>
+          </div>
+        </div>
+        
+        <div className="space-y-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="bg-blue-500/20 p-2 rounded-lg mt-1">
+              <Monitor size={16} className="text-blue-500" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-1">Desktop Experience Required</h4>
+              <p className="text-sm text-slate-400">
+                This CSV editor interface is optimized for desktop computers with larger screens.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-amber-500/20 p-2 rounded-lg mt-1">
+              <Database size={16} className="text-amber-500" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-1">Limited Mobile Features</h4>
+              <p className="text-sm text-slate-400">
+                On mobile, you can view data but editing is not recommended. CSV export and advanced sorting require desktop.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-emerald-500/20 p-2 rounded-lg mt-1">
+              <Monitor size={16} className="text-emerald-500" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white mb-1">Recommended Action</h4>
+              <p className="text-sm text-slate-400">
+                Please switch to a desktop computer or enable desktop mode in your browser for the best experience.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowMobileWarning(false)}
+            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all"
+          >
+            Proceed Anyway
+          </button>
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.close();
+              }
+            }}
+            className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-all"
+          >
+            Go Back
+          </button>
+        </div>
+        
+        <p className="text-xs text-center text-slate-500 mt-4">
+          This warning cannot be dismissed on mobile devices
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white p-3 sm:p-4 lg:p-6">
+      {/* Mobile Warning Modal */}
+      {isMobile && showMobileWarning && <MobileWarningModal />}
+      
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
@@ -413,6 +565,12 @@ const StudentDatas = () => {
           <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em]">
             Multi-Schema Database • {stats.totalStudents} Total • {stats.activeStudents} Active
           </p>
+          {isMobile && (
+            <div className="flex items-center gap-2 mt-2">
+              <Smartphone className="text-amber-500" size={14} />
+              <span className="text-xs text-amber-500 font-bold">Mobile View - Limited Features</span>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-2 w-full lg:w-auto">
@@ -425,6 +583,28 @@ const StudentDatas = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm w-full lg:w-64 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          
+          {/* Date Search */}
+          <div className="flex gap-2">
+            <select
+              value={dateSearchType}
+              onChange={(e) => setDateSearchType(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">All Dates</option>
+              <option value="ll">LL Date</option>
+              <option value="dl">DL Date</option>
+              <option value="validity">LL Validity</option>
+            </select>
+            
+            <input
+              type="date"
+              value={dateSearchValue}
+              onChange={(e) => setDateSearchValue(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-40"
+              placeholder="Search by date"
             />
           </div>
           
@@ -445,7 +625,9 @@ const StudentDatas = () => {
           {/* Export Button */}
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500/20 text-green-500 border border-green-500/20 rounded-xl hover:bg-green-500 hover:text-white transition-all"
+            disabled={isMobile}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500/20 text-green-500 border border-green-500/20 rounded-xl hover:bg-green-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            title={isMobile ? "CSV export not available on mobile" : "Export CSV"}
           >
             <Download size={16} />
             <span className="text-sm font-semibold hidden sm:inline">Export CSV</span>
@@ -506,6 +688,87 @@ const StudentDatas = () => {
             </div>
             <CreditCard className="text-cyan-400" size={20} />
           </div>
+        </div>
+      </div>
+
+      {/* Sorting Controls */}
+      <div className="mb-4 p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2">
+          <Filter size={14} className="text-slate-400" />
+          <span className="text-sm text-slate-400">Sort by:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleSort('studentName')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
+              sortConfig.key === 'studentName'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            Name
+            {sortConfig.key === 'studentName' && (
+              sortConfig.direction === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('llDate')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
+              sortConfig.key === 'llDate'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            LL Date
+            {sortConfig.key === 'llDate' && (
+              sortConfig.direction === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('dlDate')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
+              sortConfig.key === 'dlDate'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            DL Date
+            {sortConfig.key === 'dlDate' && (
+              sortConfig.direction === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('validity')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
+              sortConfig.key === 'validity'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            LL Validity
+            {sortConfig.key === 'validity' && (
+              sortConfig.direction === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+            )}
+          </button>
+          <button
+            onClick={() => handleSort('totalFee')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
+              sortConfig.key === 'totalFee'
+                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            Total Fee
+            {sortConfig.key === 'totalFee' && (
+              sortConfig.direction === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+            )}
+          </button>
+          <button
+            onClick={() => setSortConfig({ key: null, direction: 'asc' })}
+            className="px-3 py-1.5 bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 text-xs"
+          >
+            Clear Sort
+          </button>
         </div>
       </div>
 
@@ -669,12 +932,16 @@ const StudentDatas = () => {
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Database className="text-slate-500" size={32} />
                       <span className="text-sm text-slate-400">No students found</span>
-                      {searchTerm && (
+                      {(searchTerm || dateSearchValue) && (
                         <button
-                          onClick={() => setSearchTerm('')}
+                          onClick={() => {
+                            setSearchTerm('');
+                            setDateSearchValue('');
+                            setDateSearchType('all');
+                          }}
                           className="text-xs text-blue-500 hover:text-blue-400"
                         >
-                          Clear search
+                          Clear all filters
                         </button>
                       )}
                     </div>

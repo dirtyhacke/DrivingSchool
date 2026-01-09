@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const MyAllData = ({ darkMode, userId, onLogout }) => {
   const [studentData, setStudentData] = useState(null);
-  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('personal');
   const [copiedField, setCopiedField] = useState(null);
@@ -32,7 +32,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
       console.log('Fetching data for user:', userId);
       
       // Fetch student data
-      const response = await fetch('http://localhost:8080/api/students/full-registry');
+      const response = await fetch('https://drivingschool-9b6b.onrender.com/api/students/full-registry');
       
       if (!response.ok) {
         throw new Error('Failed to fetch data');
@@ -47,7 +47,7 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
       if (!currentUserData) {
         // Try alternative: Use single user endpoint
         console.log('Trying single user endpoint...');
-        const singleResponse = await fetch(`http://localhost:8080/api/students/registry/${userId}`);
+        const singleResponse = await fetch(`https://drivingschool-9b6b.onrender.com/api/students/registry/${userId}`);
         
         if (singleResponse.ok) {
           const singleData = await singleResponse.json();
@@ -123,8 +123,8 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
         
         setStudentData(formattedData);
         
-        // Now fetch payment info separately to get UPI details
-        await fetchPaymentInfo(userId, formattedData.fullName);
+        // Now fetch global payment configuration
+        await fetchPaymentConfig();
         
         toast.success('Your data loaded successfully!');
       }
@@ -137,31 +137,61 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
     }
   };
 
-  const fetchPaymentInfo = async (userId, studentName) => {
+  // Fetch global payment configuration
+  const fetchPaymentConfig = async () => {
     try {
-      // Fetch payment info for this user
-      const paymentResponse = await fetch(`http://localhost:8080/api/payments/user/${userId}`);
+      console.log('Fetching global payment configuration...');
       
-      if (paymentResponse.ok) {
-        const paymentData = await paymentResponse.json();
-        setPaymentInfo(paymentData);
+      // Try the active config endpoint first
+      const response = await fetch('https://drivingschool-9b6b.onrender.com/api/payments/config/active');
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Payment config response:', result);
+        
+        if (result.success) {
+          setPaymentConfig(result.config);
+        } else {
+          // Fallback to regular config endpoint
+          await fetchFallbackPaymentConfig();
+        }
       } else {
-        // If no payment record exists, create default payment info
-        setPaymentInfo({
-          adminUpiId: 'example@upi',
-          adminPhone: '+91 9876543210',
-          adminQrCode: null, // You would have a default QR code URL here
-          lastPaymentDate: new Date()
+        // Fallback to regular config endpoint
+        await fetchFallbackPaymentConfig();
+      }
+    } catch (error) {
+      console.error('Error fetching payment config:', error);
+      // Set default payment info
+      setPaymentConfig({
+        adminUpiId: 'drivingschool@upi',
+        adminPhone: '+91 9876543210',
+        adminQrCode: '',
+        lastUpdated: new Date()
+      });
+    }
+  };
+
+  // Fallback to regular config endpoint
+  const fetchFallbackPaymentConfig = async () => {
+    try {
+      const response = await fetch('https://drivingschool-9b6b.onrender.com/api/payments/config');
+      const result = await response.json();
+      
+      if (result.success) {
+        setPaymentConfig({
+          adminUpiId: result.config?.adminUpiId || 'drivingschool@upi',
+          adminPhone: result.config?.adminPhone || '+91 9876543210',
+          adminQrCode: result.config?.adminQrCode || '',
+          lastUpdated: result.config?.updatedAt || new Date()
         });
       }
     } catch (error) {
-      console.error('Error fetching payment info:', error);
-      // Set default payment info
-      setPaymentInfo({
+      console.error('Error fetching fallback config:', error);
+      setPaymentConfig({
         adminUpiId: 'drivingschool@upi',
         adminPhone: '+91 9876543210',
-        adminQrCode: null,
-        lastPaymentDate: new Date()
+        adminQrCode: '',
+        lastUpdated: new Date()
       });
     }
   };
@@ -226,12 +256,12 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
 
   // Function to open UPI payment
   const openUpiPayment = () => {
-    if (!paymentInfo || !paymentInfo.adminUpiId) {
-      toast.error('UPI ID not available');
+    if (!paymentConfig || !paymentConfig.adminUpiId) {
+      toast.error('UPI ID not configured');
       return;
     }
     
-    const upiId = paymentInfo.adminUpiId;
+    const upiId = paymentConfig.adminUpiId;
     const amount = studentData?.remainingAmount || 0;
     const studentName = studentData?.fullName || 'Student';
     
@@ -242,13 +272,15 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
     window.location.href = upiUrl;
     
     // Fallback: Copy UPI ID to clipboard
-    navigator.clipboard.writeText(upiId)
-      .then(() => {
-        toast.success(`UPI ID copied! Open your UPI app and paste: ${upiId}`);
-      })
-      .catch(() => {
-        toast.info(`UPI ID: ${upiId}. Please open your UPI app manually.`);
-      });
+    setTimeout(() => {
+      navigator.clipboard.writeText(upiId)
+        .then(() => {
+          toast.success(`UPI ID copied! Open your UPI app and paste: ${upiId}`);
+        })
+        .catch(() => {
+          toast.info(`UPI ID: ${upiId}. Please open your UPI app manually.`);
+        });
+    }, 1000);
   };
 
   if (loading) {
@@ -781,113 +813,140 @@ const MyAllData = ({ darkMode, userId, onLogout }) => {
               </div>
             </div>
             
-            {/* Payment Options Section */}
-            {studentData.remainingAmount > 0 && paymentInfo && (
-              <div className={`p-6 rounded-2xl ${darkMode ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'}`}>
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <IndianRupee className="text-emerald-500" size={20} />
-                  Make Payment
-                </h4>
+            {/* Payment Options Section - Show even if no balance due */}
+            <div className={`p-6 rounded-2xl ${darkMode ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'}`}>
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <IndianRupee className="text-emerald-500" size={20} />
+                Payment Methods
+              </h4>
+              
+              {studentData.remainingAmount > 0 ? (
                 <p className="text-sm opacity-70 mb-4">
                   Pay your balance of <span className="font-bold text-emerald-500">₹{studentData.remainingAmount.toLocaleString('en-IN')}</span> using any of the methods below:
                 </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* UPI Payment Option */}
-                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-emerald-500/20`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <Smartphone className="text-emerald-500" size={20} />
-                      <div>
-                        <h5 className="font-bold">UPI Payment</h5>
-                        <p className="text-sm opacity-60">Instant payment via UPI</p>
-                      </div>
+              ) : (
+                <p className="text-sm opacity-70 mb-4">
+                  Your payments are up to date. You can use these methods for any future payments:
+                </p>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* UPI Payment Option */}
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-emerald-500/20`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Smartphone className="text-emerald-500" size={20} />
+                    <div>
+                      <h5 className="font-bold">UPI Payment</h5>
+                      <p className="text-sm opacity-60">Instant payment via UPI</p>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-xs uppercase font-bold mb-1 text-emerald-500">UPI ID</div>
-                        <div className="flex items-center justify-between p-3 bg-emerald-500/10 rounded-lg">
-                          <code className="font-mono text-sm font-bold">{paymentInfo.adminUpiId || 'drivingschool@upi'}</code>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs uppercase font-bold mb-1 text-emerald-500">UPI ID</div>
+                      <div className="flex items-center justify-between p-3 bg-emerald-500/10 rounded-lg">
+                        <code className="font-mono text-sm font-bold truncate">
+                          {paymentConfig?.adminUpiId || 'Not configured'}
+                        </code>
+                        {paymentConfig?.adminUpiId && (
                           <button
-                            onClick={() => handleCopyToClipboard(paymentInfo.adminUpiId, 'UPI ID')}
-                            className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                            onClick={() => handleCopyToClipboard(paymentConfig.adminUpiId, 'UPI ID')}
+                            className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors ml-2 flex-shrink-0"
                             title="Copy UPI ID"
                           >
                             <Copy size={16} />
                           </button>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={openUpiPayment}
-                        className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <ExternalLink size={16} />
-                        Pay Now via UPI
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* QR Code Option */}
-                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-blue-500/20`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <QrCode className="text-blue-500" size={20} />
-                      <div>
-                        <h5 className="font-bold">Scan QR Code</h5>
-                        <p className="text-sm opacity-60">Scan with any UPI app</p>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="space-y-3">
-                      {paymentInfo.adminQrCode ? (
-                        <div className="flex justify-center">
-                          <img 
-                            src={paymentInfo.adminQrCode} 
-                            alt="UPI QR Code" 
-                            className="w-48 h-48 object-contain border border-white/10 rounded-lg"
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <QrCode className="mx-auto mb-3 text-blue-500 opacity-40" size={48} />
-                          <p className="text-sm opacity-60">QR Code will be displayed here</p>
-                          <p className="text-xs opacity-40">Contact admin for QR code</p>
-                        </div>
-                      )}
-                      
-                      <div className="text-center">
-                        <p className="text-xs opacity-60">Scan to pay ₹{studentData.remainingAmount.toLocaleString('en-IN')}</p>
-                      </div>
-                    </div>
+                    <button
+                      onClick={openUpiPayment}
+                      className="w-full bg-emerald-500 text-white py-3 rounded-lg font-bold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
+                      disabled={!paymentConfig?.adminUpiId}
+                    >
+                      <ExternalLink size={16} />
+                      {studentData.remainingAmount > 0 ? 'Pay Now via UPI' : 'Test UPI Payment'}
+                    </button>
                   </div>
                 </div>
                 
-                {/* Phone Payment Option */}
-                <div className="mt-6 pt-6 border-t border-white/10">
+                {/* QR Code Option */}
+                <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-white'} border border-blue-500/20`}>
                   <div className="flex items-center gap-3 mb-3">
-                    <Phone className="text-purple-500" size={20} />
+                    <QrCode className="text-blue-500" size={20} />
                     <div>
-                      <h5 className="font-bold">Phone Payment</h5>
-                      <p className="text-sm opacity-60">Contact admin for phone payment</p>
+                      <h5 className="font-bold">Scan QR Code</h5>
+                      <p className="text-sm opacity-60">Scan with any UPI app</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-4 bg-purple-500/10 rounded-xl">
-                    <div>
-                      <div className="text-xs uppercase font-bold mb-1 text-purple-500">Admin Phone</div>
-                      <div className="text-lg font-bold">{paymentInfo.adminPhone || '+91 9876543210'}</div>
+                  <div className="space-y-3">
+                    {paymentConfig?.adminQrCode ? (
+                      <div className="flex justify-center">
+                        <img 
+                          src={paymentConfig.adminQrCode} 
+                          alt="UPI QR Code" 
+                          className="w-48 h-48 object-contain border border-white/10 rounded-lg"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = `
+                              <div class="text-center py-8">
+                                <QrCode class="mx-auto mb-3 text-blue-500 opacity-40" size={48} />
+                                <p class="text-sm opacity-60">QR Code not available</p>
+                                <p class="text-xs opacity-40 mt-1">Admin will upload QR soon</p>
+                              </div>
+                            `;
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <QrCode className="mx-auto mb-3 text-blue-500 opacity-40" size={48} />
+                        <p className="text-sm opacity-60">QR Code will be displayed here</p>
+                        <p className="text-xs opacity-40 mt-1">Admin will upload QR soon</p>
+                      </div>
+                    )}
+                    
+                    <div className="text-center">
+                      <p className="text-xs opacity-60">
+                        {studentData.remainingAmount > 0 
+                          ? `Scan to pay ₹${studentData.remainingAmount.toLocaleString('en-IN')}`
+                          : 'Scan for any payment'
+                        }
+                      </p>
                     </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Phone Payment Option */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <div className="flex items-center gap-3 mb-3">
+                  <Phone className="text-purple-500" size={20} />
+                  <div>
+                    <h5 className="font-bold">Phone Payment</h5>
+                    <p className="text-sm opacity-60">Contact admin for payment assistance</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-purple-500/10 rounded-xl">
+                  <div>
+                    <div className="text-xs uppercase font-bold mb-1 text-purple-500">Admin Phone</div>
+                    <div className="text-lg font-bold">{paymentConfig?.adminPhone || '+91 9876543210'}</div>
+                  </div>
+                  {paymentConfig?.adminPhone && (
                     <button
-                      onClick={() => handleCopyToClipboard(paymentInfo.adminPhone, 'Admin Phone')}
+                      onClick={() => handleCopyToClipboard(paymentConfig.adminPhone, 'Admin Phone')}
                       className="p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
                       title="Copy Phone Number"
                     >
                       <Copy size={16} />
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
             
             {/* Payment Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
