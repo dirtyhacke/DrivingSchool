@@ -11,17 +11,13 @@ const StudentDatas = () => {
   const [savingStudents, setSavingStudents] = useState({});
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileWarning, setShowMobileWarning] = useState(false);
-  const [dateSearchType, setDateSearchType] = useState('all'); // 'all', 'll', 'dl', 'validity'
+  const [dateSearchType, setDateSearchType] = useState('all');
   const [dateSearchValue, setDateSearchValue] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // Sync these exactly with your DB Enum/Schema
   const categories = ["four-wheeler", "two-wheeler", "heavy-vehicle", "finished"];
-
-  // Skeleton loading array
   const skeletonStudents = Array(5).fill({});
 
-  // Check if device is mobile
   useEffect(() => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 1024;
@@ -37,7 +33,6 @@ const StudentDatas = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  // Helper function to format date to YYYY-MM-DD
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     
@@ -52,7 +47,6 @@ const StudentDatas = () => {
     }
   };
 
-  // Memoize fetch function
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -72,7 +66,6 @@ const StudentDatas = () => {
         const formatted = dbData.map((item, index) => {
           console.log(`Processing student ${index}:`, item.fullName, 'Sessions:', item.sessions);
           
-          // Format sessions from the new schema
           const sessions = Array.isArray(item.sessions) ? item.sessions.map(session => {
             return {
               _id: session._id,
@@ -85,35 +78,28 @@ const StudentDatas = () => {
           }) : [];
 
           return {
-            // Personal info (from User/Profile models)
             id: item._id,
             studentName: item.fullName || '',
             phone: item.phoneNumber || '',
             dob: item.dob ? formatDateForInput(item.dob) : "2000-01-01",
             
-            // Registry info (from StudentRegistry model)
             registryId: item.registryId || null,
             applicationNumber: item.appNumber || `AP-2026${String(index).padStart(3, '0')}`,
             category: item.vehicleCategory || "four-wheeler",
             
-            // Test dates and validity (from StudentRegistry model)
             llDate: formatDateForInput(item.llDate),
             dlDate: formatDateForInput(item.dlDate),
             validity: formatDateForInput(item.validity),
             
-            // Sessions (from StudentRegistry model)
             sessions: sessions,
             
-            // Financials (from Payment model - display only)
             feePaid: Number(item.paidAmount) || 0,
             totalFee: (Number(item.paidAmount) || 0) + (Number(item.remainingAmount) || 0),
             balance: Number(item.remainingAmount) || 0,
             
-            // Stats (from StudentRegistry model)
             attendanceStats: item.attendanceStats || {},
             status: item.status || 'active',
             
-            // Timestamps
             createdAt: item.createdAt || new Date().toISOString(),
             updatedAt: item.updatedAt || new Date().toISOString()
           };
@@ -123,7 +109,6 @@ const StudentDatas = () => {
         
         setStudents(formatted);
         
-        // Count sessions for toast
         const totalSessions = formatted.reduce((acc, student) => acc + student.sessions.length, 0);
         const activeStudents = formatted.filter(s => s.status === 'active').length;
         
@@ -145,12 +130,10 @@ const StudentDatas = () => {
     fetchData();
   }, [fetchData]);
 
-  // Handle manual refresh
   const handleManualRefresh = () => {
     fetchData();
   };
 
-  // Sorting function
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -159,7 +142,6 @@ const StudentDatas = () => {
     setSortConfig({ key, direction });
   };
 
-  // Sort students based on configuration
   const getSortedStudents = (studentsToSort) => {
     if (!sortConfig.key) return studentsToSort;
 
@@ -174,7 +156,6 @@ const StudentDatas = () => {
     });
   };
 
-  // Filter students
   const filteredStudents = getSortedStudents(students.filter(student => {
     const matchesSearch = 
       student.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -183,7 +164,6 @@ const StudentDatas = () => {
     
     const matchesCategory = selectedCategory === 'all' || student.category === selectedCategory;
     
-    // Date search logic
     let matchesDate = true;
     if (dateSearchValue) {
       const searchDate = formatDateForInput(dateSearchValue);
@@ -210,7 +190,6 @@ const StudentDatas = () => {
     return matchesSearch && matchesCategory && matchesDate;
   }));
 
-  // Handle personal info changes (User/Profile models)
   const handlePersonalInfoChange = (id, field, value) => {
     setStudents(prev => prev.map(s => {
       if (s.id === id) {
@@ -224,7 +203,6 @@ const StudentDatas = () => {
     }));
   };
 
-  // Handle registry info changes (StudentRegistry model)
   const handleRegistryInfoChange = (id, field, value) => {
     setStudents(prev => prev.map(s => {
       if (s.id === id) {
@@ -234,7 +212,6 @@ const StudentDatas = () => {
           updatedAt: new Date().toISOString()
         };
         
-        // Auto-update balance when totalFee or feePaid changes
         if (field === 'totalFee' || field === 'feePaid') {
           const total = field === 'totalFee' ? Number(value) : s.totalFee;
           const paid = field === 'feePaid' ? Number(value) : s.feePaid;
@@ -247,7 +224,6 @@ const StudentDatas = () => {
     }));
   };
 
-  // Handle session changes
   const handleSessionChange = (studentId, sessionIndex, field, value) => {
     setStudents(prev => prev.map(s => {
       if (s.id === studentId) {
@@ -297,15 +273,13 @@ const StudentDatas = () => {
     ));
   };
 
-  // ✅ FIXED: Save all student data with proper date handling
   const handleSave = async (student) => {
     setSavingStudents(prev => ({ ...prev, [student.id]: true }));
     
     const tid = toast.loading(`Updating ${student.studentName}...`);
     try {
-      // Format data for the new schema
       const saveData = {
-        id: student.id, // User ID
+        id: student.id,
         studentName: student.studentName,
         phone: student.phone,
         dob: student.dob,
@@ -341,12 +315,10 @@ const StudentDatas = () => {
       console.log('Backend response:', response.status, result);
       
       if (response.ok) {
-        // Simulate delay for animation
         await new Promise(resolve => setTimeout(resolve, 800));
         
         toast.success(`✅ ${student.studentName} updated successfully`, { id: tid });
         
-        // Update local state with new data from backend if available
         setStudents(prev => prev.map(s => 
           s.id === student.id ? { 
             ...s, 
@@ -355,7 +327,6 @@ const StudentDatas = () => {
           } : s
         ));
         
-        // Show success animation
         setTimeout(() => {
           setSavingStudents(prev => ({ ...prev, [student.id]: false }));
         }, 300);
@@ -392,7 +363,6 @@ const StudentDatas = () => {
     }
   };
 
-  // Export to CSV
   const exportToCSV = () => {
     const headers = [
       'Student Name', 'Application Number', 'Phone', 'DOB',
@@ -433,7 +403,6 @@ const StudentDatas = () => {
     toast.success('CSV exported successfully');
   };
 
-  // Bulk actions
   const toggleBulkSelect = (id) => {
     setBulkSelect(prev => 
       prev.includes(id) 
@@ -459,7 +428,6 @@ const StudentDatas = () => {
     }
   };
 
-  // Calculate stats
   const calculateStats = () => {
     const totalStudents = students.length;
     const activeStudents = students.filter(s => s.status === 'active').length;
@@ -471,17 +439,16 @@ const StudentDatas = () => {
 
   const stats = calculateStats();
 
-  // Mobile Warning Modal
   const MobileWarningModal = () => (
     <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1e293b] border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div className="bg-white border border-red-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-red-500/20 p-2 rounded-lg">
             <Smartphone className="text-red-500" size={24} />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Mobile Device Detected</h3>
-            <p className="text-sm text-slate-400">Limited functionality on mobile</p>
+            <h3 className="text-xl font-bold text-gray-900">Mobile Device Detected</h3>
+            <p className="text-sm text-gray-600">Limited functionality on mobile</p>
           </div>
         </div>
         
@@ -491,8 +458,8 @@ const StudentDatas = () => {
               <Monitor size={16} className="text-blue-500" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">Desktop Experience Required</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-bold text-gray-900 mb-1">Desktop Experience Required</h4>
+              <p className="text-sm text-gray-600">
                 This CSV editor interface is optimized for desktop computers with larger screens.
               </p>
             </div>
@@ -503,8 +470,8 @@ const StudentDatas = () => {
               <Database size={16} className="text-amber-500" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">Limited Mobile Features</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-bold text-gray-900 mb-1">Limited Mobile Features</h4>
+              <p className="text-sm text-gray-600">
                 On mobile, you can view data but editing is not recommended. CSV export and advanced sorting require desktop.
               </p>
             </div>
@@ -515,8 +482,8 @@ const StudentDatas = () => {
               <Monitor size={16} className="text-emerald-500" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">Recommended Action</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-bold text-gray-900 mb-1">Recommended Action</h4>
+              <p className="text-sm text-gray-600">
                 Please switch to a desktop computer or enable desktop mode in your browser for the best experience.
               </p>
             </div>
@@ -526,7 +493,7 @@ const StudentDatas = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setShowMobileWarning(false)}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all"
           >
             Proceed Anyway
           </button>
@@ -538,13 +505,13 @@ const StudentDatas = () => {
                 window.close();
               }
             }}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-all"
+            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-lg transition-all"
           >
             Go Back
           </button>
         </div>
         
-        <p className="text-xs text-center text-slate-500 mt-4">
+        <p className="text-xs text-center text-gray-500 mt-4">
           This warning cannot be dismissed on mobile devices
         </p>
       </div>
@@ -552,7 +519,7 @@ const StudentDatas = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white p-3 sm:p-4 lg:p-6">
+    <div className="min-h-screen bg-white text-gray-800 p-3 sm:p-4 lg:p-6">
       {/* Mobile Warning Modal */}
       {isMobile && showMobileWarning && <MobileWarningModal />}
       
@@ -560,15 +527,15 @@ const StudentDatas = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
           <h1 className="text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center gap-2">
-            <Database className="text-blue-500" size={20} /> STUDENT REGISTRY
+            <Database className="text-blue-600" size={20} /> STUDENT REGISTRY
           </h1>
-          <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em]">
+          <p className="text-gray-600 text-[9px] font-bold uppercase tracking-[0.2em]">
             Multi-Schema Database • {stats.totalStudents} Total • {stats.activeStudents} Active
           </p>
           {isMobile && (
             <div className="flex items-center gap-2 mt-2">
-              <Smartphone className="text-amber-500" size={14} />
-              <span className="text-xs text-amber-500 font-bold">Mobile View - Limited Features</span>
+              <Smartphone className="text-amber-600" size={14} />
+              <span className="text-xs text-amber-600 font-bold">Mobile View - Limited Features</span>
             </div>
           )}
         </div>
@@ -576,13 +543,13 @@ const StudentDatas = () => {
         <div className="flex flex-wrap gap-2 w-full lg:w-auto">
           {/* Search */}
           <div className="relative flex-grow lg:flex-grow-0">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" size={16} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <input
               type="text"
               placeholder="Search by name or application #..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm w-full lg:w-64 focus:outline-none focus:border-blue-500"
+              className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm w-full lg:w-64 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             />
           </div>
           
@@ -591,7 +558,7 @@ const StudentDatas = () => {
             <select
               value={dateSearchType}
               onChange={(e) => setDateSearchType(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+              className="bg-gray-50 border border-gray-300 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             >
               <option value="all">All Dates</option>
               <option value="ll">LL Date</option>
@@ -603,7 +570,7 @@ const StudentDatas = () => {
               type="date"
               value={dateSearchValue}
               onChange={(e) => setDateSearchValue(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-40"
+              className="bg-gray-50 border border-gray-300 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 w-40"
               placeholder="Search by date"
             />
           </div>
@@ -612,11 +579,11 @@ const StudentDatas = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="bg-gray-50 border border-gray-300 rounded-xl px-3 sm:px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
             <option value="all">All Categories</option>
             {categories.map(cat => (
-              <option key={cat} value={cat} className="bg-[#0f172a]">
+              <option key={cat} value={cat} className="bg-white">
                 {cat.replace('-', ' ').toUpperCase()}
               </option>
             ))}
@@ -626,7 +593,7 @@ const StudentDatas = () => {
           <button
             onClick={exportToCSV}
             disabled={isMobile}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-500/20 text-green-500 border border-green-500/20 rounded-xl hover:bg-green-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-100 text-green-700 border border-green-300 rounded-xl hover:bg-green-600 hover:text-white hover:border-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             title={isMobile ? "CSV export not available on mobile" : "Export CSV"}
           >
             <Download size={16} />
@@ -637,7 +604,7 @@ const StudentDatas = () => {
           <button
             onClick={handleManualRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-500/20 text-blue-500 border border-blue-500/20 rounded-xl hover:bg-blue-500 hover:text-white transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-100 text-blue-700 border border-blue-300 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all disabled:opacity-50"
             title="Refresh Data"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -648,62 +615,62 @@ const StudentDatas = () => {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white">{stats.totalStudents}</div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">Total Students</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalStudents}</div>
+              <div className="text-xs text-gray-600 uppercase tracking-wider">Total Students</div>
             </div>
-            <User className="text-blue-400" size={20} />
+            <User className="text-blue-600" size={20} />
           </div>
         </div>
         
-        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white">{stats.activeStudents}</div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">Active</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.activeStudents}</div>
+              <div className="text-xs text-gray-600 uppercase tracking-wider">Active</div>
             </div>
-            <FileText className="text-emerald-400" size={20} />
+            <FileText className="text-emerald-600" size={20} />
           </div>
         </div>
         
-        <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-4">
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white">{stats.totalSessions}</div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">Sessions</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalSessions}</div>
+              <div className="text-xs text-gray-600 uppercase tracking-wider">Sessions</div>
             </div>
-            <Calendar className="text-purple-400" size={20} />
+            <Calendar className="text-purple-600" size={20} />
           </div>
         </div>
         
-        <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-4">
+        <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-white">
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">
                 {students.reduce((acc, s) => acc + (s.attendanceStats?.totalSessions || 0), 0)}
               </div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">Total Training</div>
+              <div className="text-xs text-gray-600 uppercase tracking-wider">Total Training</div>
             </div>
-            <CreditCard className="text-cyan-400" size={20} />
+            <CreditCard className="text-cyan-600" size={20} />
           </div>
         </div>
       </div>
 
       {/* Sorting Controls */}
-      <div className="mb-4 p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl flex flex-wrap gap-3 items-center">
+      <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl flex flex-wrap gap-3 items-center">
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-slate-400" />
-          <span className="text-sm text-slate-400">Sort by:</span>
+          <Filter size={14} className="text-gray-500" />
+          <span className="text-sm text-gray-600">Sort by:</span>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => handleSort('studentName')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
               sortConfig.key === 'studentName'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
             }`}
           >
             Name
@@ -715,8 +682,8 @@ const StudentDatas = () => {
             onClick={() => handleSort('llDate')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
               sortConfig.key === 'llDate'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
             }`}
           >
             LL Date
@@ -728,8 +695,8 @@ const StudentDatas = () => {
             onClick={() => handleSort('dlDate')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
               sortConfig.key === 'dlDate'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
             }`}
           >
             DL Date
@@ -741,8 +708,8 @@ const StudentDatas = () => {
             onClick={() => handleSort('validity')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
               sortConfig.key === 'validity'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
             }`}
           >
             LL Validity
@@ -754,8 +721,8 @@ const StudentDatas = () => {
             onClick={() => handleSort('totalFee')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 ${
               sortConfig.key === 'totalFee'
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
             }`}
           >
             Total Fee
@@ -765,7 +732,7 @@ const StudentDatas = () => {
           </button>
           <button
             onClick={() => setSortConfig({ key: null, direction: 'asc' })}
-            className="px-3 py-1.5 bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 text-xs"
+            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 border border-gray-300 text-xs"
           >
             Clear Sort
           </button>
@@ -774,20 +741,20 @@ const StudentDatas = () => {
 
       {/* Bulk Actions */}
       {bulkSelect.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <span className="text-sm text-blue-400">
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-300 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <span className="text-sm text-blue-700">
             {bulkSelect.length} student(s) selected
           </span>
           <div className="flex gap-2">
             <button
               onClick={bulkDelete}
-              className="px-3 py-1.5 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white text-sm transition-all"
+              className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-600 hover:text-white border border-red-300 text-sm transition-all"
             >
               Delete Selected
             </button>
             <button
               onClick={() => setBulkSelect([])}
-              className="px-3 py-1.5 bg-white/5 text-slate-400 rounded-lg hover:bg-white/10 text-sm transition-all"
+              className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 border border-gray-300 text-sm transition-all"
             >
               Clear Selection
             </button>
@@ -796,11 +763,11 @@ const StudentDatas = () => {
       )}
 
       {/* CSV-like Table */}
-      <div className="bg-[#0f172a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto max-h-[calc(100vh-320px)]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10 bg-[#0f172a]">
-              <tr className="border-b border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-400">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="border-b border-gray-300 text-[9px] font-black uppercase tracking-widest text-gray-600">
                 <th className="p-3 w-8">
                   <input
                     type="checkbox"
@@ -812,40 +779,40 @@ const StudentDatas = () => {
                         setBulkSelect([]);
                       }
                     }}
-                    className="rounded border-white/20 bg-white/5"
+                    className="rounded border-gray-400 bg-gray-100"
                   />
                 </th>
-                <th className="p-3 border-r border-white/10 min-w-[180px]">
+                <th className="p-3 border-r border-gray-300 min-w-[180px]">
                   <div className="flex items-center gap-1">
                     <User size={10} />
                     <span>Personal Info</span>
                   </div>
                 </th>
-                <th className="p-3 border-r border-white/10 min-w-[150px]">
+                <th className="p-3 border-r border-gray-300 min-w-[150px]">
                   <div className="flex items-center gap-1">
                     <FileText size={10} />
                     <span>Registry Details</span>
                   </div>
                 </th>
-                <th className="p-3 border-r border-white/10 text-center min-w-[130px]">
+                <th className="p-3 border-r border-gray-300 text-center min-w-[130px]">
                   <div className="flex items-center justify-center gap-1">
                     <Calendar size={10} />
                     <span>Test Dates</span>
                   </div>
                 </th>
-                <th className="p-3 border-r border-white/10 text-center min-w-[120px]">
+                <th className="p-3 border-r border-gray-300 text-center min-w-[120px]">
                   <div className="flex items-center justify-center gap-1">
                     <Calendar size={10} />
                     <span>LL Validity</span>
                   </div>
                 </th>
-                <th className="p-3 border-r border-white/10 text-center min-w-[140px]">
+                <th className="p-3 border-r border-gray-300 text-center min-w-[140px]">
                   <div className="flex items-center justify-center gap-1">
                     <CreditCard size={10} />
                     <span>Financials</span>
                   </div>
                 </th>
-                <th className="p-3 border-r border-white/10 text-center min-w-[250px] sm:min-w-[300px]">
+                <th className="p-3 border-r border-gray-300 text-center min-w-[250px] sm:min-w-[300px]">
                   <div className="flex items-center justify-center gap-1">
                     <Calendar size={10} />
                     <span>Attendance Sessions</span>
@@ -859,69 +826,68 @@ const StudentDatas = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-gray-300">
               {loading ? (
-                // Skeleton Loading Rows
                 skeletonStudents.map((_, index) => (
                   <tr key={`skeleton-${index}`} className="animate-pulse">
                     <td className="p-3">
-                      <div className="w-4 h-4 bg-white/10 rounded"></div>
+                      <div className="w-4 h-4 bg-gray-200 rounded"></div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
+                    <td className="p-3 border-r border-gray-300">
                       <div className="space-y-2">
-                        <div className="h-4 bg-white/10 rounded w-3/4"></div>
-                        <div className="h-3 bg-white/10 rounded w-1/2"></div>
-                        <div className="h-3 bg-white/10 rounded w-2/3"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                       </div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
+                    <td className="p-3 border-r border-gray-300">
                       <div className="space-y-2">
-                        <div className="h-4 bg-white/10 rounded w-full"></div>
-                        <div className="h-3 bg-white/10 rounded w-2/3"></div>
-                        <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
+                    <td className="p-3 border-r border-gray-300">
                       <div className="space-y-3">
-                        <div className="h-3 bg-white/10 rounded"></div>
-                        <div className="h-3 bg-white/10 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded"></div>
                       </div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
-                      <div className="h-8 bg-white/10 rounded"></div>
+                    <td className="p-3 border-r border-gray-300">
+                      <div className="h-8 bg-gray-200 rounded"></div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
+                    <td className="p-3 border-r border-gray-300">
                       <div className="space-y-3">
-                        <div className="h-4 bg-white/10 rounded w-3/4 mx-auto"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="h-6 bg-white/10 rounded"></div>
-                          <div className="h-6 bg-white/10 rounded"></div>
+                          <div className="h-6 bg-gray-200 rounded"></div>
+                          <div className="h-6 bg-gray-200 rounded"></div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 border-r border-white/10">
+                    <td className="p-3 border-r border-gray-300">
                       <div className="flex flex-col gap-3">
                         <div className="max-h-40 overflow-y-auto pr-2">
                           <div className="grid grid-cols-12 gap-1 mb-2">
                             {[...Array(12)].map((_, i) => (
-                              <div key={i} className="h-3 bg-white/10 rounded col-span-1"></div>
+                              <div key={i} className="h-3 bg-gray-200 rounded col-span-1"></div>
                             ))}
                           </div>
                           {[...Array(2)].map((_, i) => (
                             <div key={i} className="grid grid-cols-12 gap-1 mb-2">
                               {[...Array(12)].map((_, j) => (
-                                <div key={j} className="h-6 bg-white/10 rounded col-span-1"></div>
+                                <div key={j} className="h-6 bg-gray-200 rounded col-span-1"></div>
                               ))}
                             </div>
                           ))}
                         </div>
-                        <div className="h-8 bg-white/10 rounded"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
                       </div>
                     </td>
                     <td className="p-3">
                       <div className="flex flex-col gap-2">
-                        <div className="h-10 bg-white/10 rounded"></div>
-                        <div className="h-10 bg-white/10 rounded"></div>
+                        <div className="h-10 bg-gray-200 rounded"></div>
+                        <div className="h-10 bg-gray-200 rounded"></div>
                       </div>
                     </td>
                   </tr>
@@ -930,8 +896,8 @@ const StudentDatas = () => {
                 <tr>
                   <td colSpan="8" className="p-8 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Database className="text-slate-500" size={32} />
-                      <span className="text-sm text-slate-400">No students found</span>
+                      <Database className="text-gray-400" size={32} />
+                      <span className="text-sm text-gray-600">No students found</span>
                       {(searchTerm || dateSearchValue) && (
                         <button
                           onClick={() => {
@@ -939,7 +905,7 @@ const StudentDatas = () => {
                             setDateSearchValue('');
                             setDateSearchType('all');
                           }}
-                          className="text-xs text-blue-500 hover:text-blue-400"
+                          className="text-xs text-blue-600 hover:text-blue-800"
                         >
                           Clear all filters
                         </button>
@@ -951,8 +917,8 @@ const StudentDatas = () => {
                 filteredStudents.map((student) => (
                   <tr 
                     key={student.id} 
-                    className={`hover:bg-white/[0.01] transition-colors ${
-                      bulkSelect.includes(student.id) ? 'bg-blue-500/5' : ''
+                    className={`hover:bg-gray-50 transition-colors ${
+                      bulkSelect.includes(student.id) ? 'bg-blue-50' : ''
                     }`}
                   >
                     {/* Checkbox */}
@@ -961,15 +927,15 @@ const StudentDatas = () => {
                         type="checkbox"
                         checked={bulkSelect.includes(student.id)}
                         onChange={() => toggleBulkSelect(student.id)}
-                        className="rounded border-white/20 bg-white/5"
+                        className="rounded border-gray-400 bg-gray-100"
                       />
                     </td>
 
-                    {/* Personal Info (User/Profile Models) */}
-                    <td className="p-3 border-r border-white/10 min-w-[180px]">
+                    {/* Personal Info */}
+                    <td className="p-3 border-r border-gray-300 min-w-[180px]">
                       <div className="space-y-2">
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center gap-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
                             <User size={8} />
                             Student Name
                           </div>
@@ -977,12 +943,12 @@ const StudentDatas = () => {
                             type="text"
                             value={student.studentName}
                             onChange={(e) => handlePersonalInfoChange(student.id, 'studentName', e.target.value)}
-                            className="w-full bg-blue-500/5 p-2 text-sm font-bold focus:outline-none focus:bg-blue-500/10 rounded border border-transparent focus:border-blue-500/30"
+                            className="w-full bg-blue-50 p-2 text-sm font-bold focus:outline-none focus:bg-blue-100 rounded border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             placeholder="Full Name"
                           />
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center gap-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
                             <Phone size={8} />
                             Phone
                           </div>
@@ -990,12 +956,12 @@ const StudentDatas = () => {
                             type="tel"
                             value={student.phone}
                             onChange={(e) => handlePersonalInfoChange(student.id, 'phone', e.target.value)}
-                            className="w-full bg-transparent p-1.5 text-xs text-slate-400 font-bold outline-none border border-transparent focus:border-blue-500/30 rounded"
+                            className="w-full bg-gray-50 p-1.5 text-xs text-gray-700 font-bold outline-none border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded"
                             placeholder="Phone Number"
                           />
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center gap-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
                             <Calendar size={8} />
                             Date of Birth
                           </div>
@@ -1003,126 +969,126 @@ const StudentDatas = () => {
                             type="date"
                             value={student.dob}
                             onChange={(e) => handlePersonalInfoChange(student.id, 'dob', e.target.value)}
-                            className="w-full bg-transparent p-1.5 text-xs text-slate-500 outline-none border border-transparent focus:border-blue-500/30 rounded"
+                            className="w-full bg-gray-50 p-1.5 text-xs text-gray-700 outline-none border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded"
                           />
                         </div>
                       </div>
                     </td>
 
-                    {/* Registry Details (StudentRegistry Model) */}
-                    <td className="p-3 border-r border-white/10 min-w-[150px]">
+                    {/* Registry Details */}
+                    <td className="p-3 border-r border-gray-300 min-w-[150px]">
                       <div className="space-y-2">
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">
                             Application #
                           </div>
                           <input
                             type="text"
                             value={student.applicationNumber}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'applicationNumber', e.target.value)}
-                            className="w-full bg-transparent p-1.5 text-xs font-mono text-blue-400 outline-none border border-transparent focus:border-blue-500/30 rounded"
+                            className="w-full bg-gray-50 p-1.5 text-xs font-mono text-blue-700 outline-none border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded"
                             placeholder="APP-0001"
                           />
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">
                             Vehicle Category
                           </div>
                           <select
                             value={student.category}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'category', e.target.value)}
-                            className="w-full bg-blue-600/20 text-blue-400 text-xs p-1.5 rounded border border-blue-500/20 uppercase font-bold outline-none cursor-pointer"
+                            className="w-full bg-blue-100 text-blue-700 text-xs p-1.5 rounded border border-blue-300 uppercase font-bold outline-none cursor-pointer"
                           >
                             {categories.map(c => (
-                              <option key={c} value={c} className="bg-[#0f172a]">
+                              <option key={c} value={c} className="bg-white">
                                 {c.replace('-', ' ')}
                               </option>
                             ))}
                           </select>
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">
                             Status
                           </div>
                           <select
                             value={student.status}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'status', e.target.value)}
-                            className="w-full bg-white/5 text-slate-400 text-xs p-1.5 rounded border border-white/10 uppercase font-bold outline-none cursor-pointer"
+                            className="w-full bg-gray-100 text-gray-700 text-xs p-1.5 rounded border border-gray-300 uppercase font-bold outline-none cursor-pointer"
                           >
-                            <option value="active" className="bg-[#0f172a]">Active</option>
-                            <option value="completed" className="bg-[#0f172a]">Completed</option>
-                            <option value="discontinued" className="bg-[#0f172a]">Discontinued</option>
-                            <option value="on_hold" className="bg-[#0f172a]">On Hold</option>
+                            <option value="active" className="bg-white">Active</option>
+                            <option value="completed" className="bg-white">Completed</option>
+                            <option value="discontinued" className="bg-white">Discontinued</option>
+                            <option value="on_hold" className="bg-white">On Hold</option>
                           </select>
                         </div>
                       </div>
                     </td>
 
-                    {/* Test Dates (StudentRegistry Model) */}
-                    <td className="p-3 border-r border-white/10 min-w-[130px]">
+                    {/* Test Dates */}
+                    <td className="p-3 border-r border-gray-300 min-w-[130px]">
                       <div className="space-y-3">
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">LL Date</div>
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">LL Date</div>
                           <input
                             type="date"
                             value={student.llDate}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'llDate', e.target.value)}
-                            className="w-full bg-white/5 p-1.5 rounded text-xs outline-none border border-transparent focus:border-blue-500/30"
+                            className="w-full bg-gray-50 p-1.5 rounded text-xs outline-none border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                           />
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">DL Date</div>
+                          <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">DL Date</div>
                           <input
                             type="date"
                             value={student.dlDate}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'dlDate', e.target.value)}
-                            className="w-full bg-white/5 p-1.5 rounded text-xs outline-none border border-transparent focus:border-blue-500/30"
+                            className="w-full bg-gray-50 p-1.5 rounded text-xs outline-none border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                           />
                         </div>
                       </div>
                     </td>
 
-                    {/* LL Validity (StudentRegistry Model) */}
-                    <td className="p-3 border-r border-white/10 min-w-[120px]">
+                    {/* LL Validity */}
+                    <td className="p-3 border-r border-gray-300 min-w-[120px]">
                       <div className="flex flex-col items-center justify-center h-full">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold mb-2">LL Valid Until</div>
+                        <div className="text-[10px] text-gray-500 uppercase font-bold mb-2">LL Valid Until</div>
                         <input
                           type="date"
                           value={student.validity}
                           onChange={(e) => handleRegistryInfoChange(student.id, 'validity', e.target.value)}
-                          className="bg-white/5 p-2 rounded text-xs text-orange-400 outline-none border border-transparent focus:border-orange-500/30 text-center w-full"
+                          className="bg-gray-50 p-2 rounded text-xs text-orange-700 outline-none border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-center w-full"
                         />
                       </div>
                     </td>
 
-                    {/* Financials (Payment Model) - Only Total Fee and Paid Amount inputs */}
-                    <td className="p-3 border-r border-white/10 min-w-[140px]">
+                    {/* Financials */}
+                    <td className="p-3 border-r border-gray-300 min-w-[140px]">
                       <div className="space-y-3">
                         <div className="text-center">
-                          <div className="text-[8px] text-slate-500 uppercase font-bold">TOTAL FEE</div>
+                          <div className="text-[8px] text-gray-500 uppercase font-bold">TOTAL FEE</div>
                           <input
                             type="number"
                             value={student.totalFee}
                             onChange={(e) => handleRegistryInfoChange(student.id, 'totalFee', e.target.value)}
-                            className="w-full bg-cyan-500/10 p-1.5 rounded text-xs text-center text-cyan-400 font-bold outline-none border border-transparent focus:border-cyan-500/30"
+                            className="w-full bg-cyan-50 p-1.5 rounded text-xs text-center text-cyan-700 font-bold outline-none border border-gray-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
                             min="0"
                           />
                         </div>
                         <div className="grid grid-cols-1 gap-2">
                           <div>
-                            <div className="text-[8px] text-emerald-500 uppercase font-bold">PAID AMOUNT</div>
+                            <div className="text-[8px] text-emerald-600 uppercase font-bold">PAID AMOUNT</div>
                             <input
                               type="number"
                               value={student.feePaid}
                               onChange={(e) => handleRegistryInfoChange(student.id, 'feePaid', e.target.value)}
-                              className="w-full bg-emerald-500/10 p-1.5 rounded text-xs text-center text-emerald-500 font-bold outline-none border border-transparent focus:border-emerald-500/30"
+                              className="w-full bg-emerald-50 p-1.5 rounded text-xs text-center text-emerald-700 font-bold outline-none border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                               min="0"
                               max={student.totalFee}
                             />
                           </div>
                           <div>
-                            <div className="text-[8px] text-red-500 uppercase font-bold">BALANCE</div>
-                            <div className="w-full bg-red-500/10 p-1.5 rounded text-xs text-center text-red-500 font-bold border border-red-500/20">
+                            <div className="text-[8px] text-red-600 uppercase font-bold">BALANCE</div>
+                            <div className="w-full bg-red-50 p-1.5 rounded text-xs text-center text-red-700 font-bold border border-red-300">
                               ₹{student.balance}
                             </div>
                           </div>
@@ -1132,10 +1098,10 @@ const StudentDatas = () => {
                           <div className="text-[7px] uppercase font-bold mb-1">Payment Status</div>
                           <div className={`text-[9px] font-bold px-2 py-1 rounded ${
                             student.balance === 0 
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
                               : student.feePaid === 0
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              ? 'bg-red-100 text-red-700 border border-red-300'
+                              : 'bg-amber-100 text-amber-700 border border-amber-300'
                           }`}>
                             {student.balance === 0 ? 'COMPLETED' : student.feePaid === 0 ? 'PENDING' : 'PARTIAL'}
                           </div>
@@ -1143,12 +1109,12 @@ const StudentDatas = () => {
                       </div>
                     </td>
 
-                    {/* Attendance Sessions (StudentRegistry Model) */}
-                    <td className="p-3 border-r border-white/10 min-w-[250px] sm:min-w-[300px]">
+                    {/* Attendance Sessions */}
+                    <td className="p-3 border-r border-gray-300 min-w-[250px] sm:min-w-[300px]">
                       <div className="flex flex-col gap-3">
                         {/* Sessions List */}
                         <div className="max-h-40 overflow-y-auto pr-2">
-                          <div className="grid grid-cols-12 gap-1 text-[8px] text-slate-500 uppercase font-bold mb-1 px-1">
+                          <div className="grid grid-cols-12 gap-1 text-[8px] text-gray-500 uppercase font-bold mb-1 px-1">
                             <div className="col-span-4 text-center">Vehicle Type</div>
                             <div className="col-span-2 text-center">G</div>
                             <div className="col-span-2 text-center">S</div>
@@ -1160,13 +1126,13 @@ const StudentDatas = () => {
                             student.sessions.map((sess, idx) => (
                               <div
                                 key={sess._id || idx}
-                                className="grid grid-cols-12 gap-1 items-center bg-white/5 p-1.5 rounded border border-white/5 hover:border-white/10 transition-all mb-1"
+                                className="grid grid-cols-12 gap-1 items-center bg-gray-50 p-1.5 rounded border border-gray-300 hover:border-gray-400 transition-all mb-1"
                               >
                                 <div className="col-span-4 flex justify-center">
                                   <span className={`px-2 py-1 rounded text-[9px] font-bold flex items-center gap-1 ${
                                     sess.vehicleType?.includes('two') 
-                                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/20' 
-                                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/20'
+                                      ? 'bg-purple-100 text-purple-700 border border-purple-300' 
+                                      : 'bg-blue-100 text-blue-700 border border-blue-300'
                                   }`}>
                                     {sess.vehicleType?.includes('two') ? <Bike size={10} /> : <Car size={10} />}
                                     <span className="uppercase">
@@ -1181,7 +1147,7 @@ const StudentDatas = () => {
                                     type="number"
                                     value={sess.ground}
                                     onChange={e => handleSessionChange(student.id, idx, 'ground', e.target.value)}
-                                    className="w-full bg-transparent text-xs text-center font-bold outline-none border border-white/10 rounded p-1"
+                                    className="w-full bg-white text-xs text-center font-bold outline-none border border-gray-300 rounded p-1"
                                     min="0"
                                   />
                                 </div>
@@ -1191,7 +1157,7 @@ const StudentDatas = () => {
                                     type="number"
                                     value={sess.simulation}
                                     onChange={e => handleSessionChange(student.id, idx, 'simulation', e.target.value)}
-                                    className="w-full bg-transparent text-xs text-center font-bold text-blue-400 outline-none border border-blue-500/20 rounded p-1"
+                                    className="w-full bg-white text-xs text-center font-bold text-blue-700 outline-none border border-blue-300 rounded p-1"
                                     min="0"
                                   />
                                 </div>
@@ -1201,7 +1167,7 @@ const StudentDatas = () => {
                                     type="number"
                                     value={sess.road}
                                     onChange={e => handleSessionChange(student.id, idx, 'road', e.target.value)}
-                                    className="w-full bg-transparent text-xs text-center font-bold text-emerald-500 outline-none border border-emerald-500/20 rounded p-1"
+                                    className="w-full bg-white text-xs text-center font-bold text-emerald-700 outline-none border border-emerald-300 rounded p-1"
                                     min="0"
                                   />
                                 </div>
@@ -1209,7 +1175,7 @@ const StudentDatas = () => {
                                 <div className="col-span-2 flex justify-end">
                                   <button
                                     onClick={() => removeSession(student.id, idx)}
-                                    className="text-slate-500 hover:text-red-500 p-0.5 transition-colors"
+                                    className="text-gray-600 hover:text-red-600 p-0.5 transition-colors"
                                     title="Remove session"
                                   >
                                     <X size={12} />
@@ -1218,7 +1184,7 @@ const StudentDatas = () => {
                               </div>
                             ))
                           ) : (
-                            <div className="text-center py-4 text-slate-500 text-xs">
+                            <div className="text-center py-4 text-gray-600 text-xs">
                               No attendance sessions recorded
                             </div>
                           )}
@@ -1227,7 +1193,7 @@ const StudentDatas = () => {
                         {/* Add Session Button */}
                         <button
                           onClick={() => addSession(student.id)}
-                          className="flex items-center justify-center gap-1 border border-dashed border-white/10 rounded py-2 text-xs text-slate-400 hover:text-blue-400 hover:border-blue-500/30 uppercase font-bold transition-all w-full"
+                          className="flex items-center justify-center gap-1 border border-dashed border-gray-300 rounded py-2 text-xs text-gray-600 hover:text-blue-600 hover:border-blue-400 uppercase font-bold transition-all w-full"
                         >
                           <PlusCircle size={12} />
                           Add Session
@@ -1238,20 +1204,20 @@ const StudentDatas = () => {
                     {/* Actions */}
                     <td className="p-3 min-w-[120px]">
                       <div className="flex flex-col gap-2 items-center">
-                        {/* Save Button with Animation */}
+                        {/* Save Button */}
                         <button
                           onClick={() => handleSave(student)}
                           disabled={savingStudents[student.id]}
                           className={`relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all border w-full justify-center overflow-hidden ${
                             savingStudents[student.id]
-                              ? 'bg-emerald-500/30 text-emerald-300 border-emerald-500/30 cursor-not-allowed'
-                              : 'bg-emerald-500/20 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10'
+                              ? 'bg-emerald-100 text-emerald-700 border-emerald-300 cursor-not-allowed'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white shadow-lg shadow-emerald-500/10'
                           }`}
                           title="Save changes"
                         >
                           {savingStudents[student.id] ? (
                             <>
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent animate-shimmer"></div>
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-200 to-transparent animate-shimmer"></div>
                               <Clock className="animate-pulse" size={14} />
                               <span className="text-xs font-semibold">Saving...</span>
                             </>
@@ -1266,7 +1232,7 @@ const StudentDatas = () => {
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDelete(student.id, student.studentName)}
-                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-500/10 w-full justify-center"
+                          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-600 hover:text-white transition-all border border-red-300 w-full justify-center"
                           title="Delete student"
                         >
                           <Trash2 size={14} />
@@ -1283,21 +1249,21 @@ const StudentDatas = () => {
       </div>
 
       {/* Footer Stats */}
-      <div className="mt-4 flex flex-wrap gap-3 sm:gap-4 text-xs text-slate-500">
+      <div className="mt-4 flex flex-wrap gap-3 sm:gap-4 text-xs text-gray-600">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500/20 rounded-full border border-blue-500/30"></div>
+          <div className="w-3 h-3 bg-blue-100 rounded-full border border-blue-300"></div>
           <span>User Model: Personal Information</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-emerald-500/20 rounded-full border border-emerald-500/30"></div>
+          <div className="w-3 h-3 bg-emerald-100 rounded-full border border-emerald-300"></div>
           <span>Registry Model: Attendance & Test Data</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-cyan-500/20 rounded-full border border-cyan-500/30"></div>
+          <div className="w-3 h-3 bg-cyan-100 rounded-full border border-cyan-300"></div>
           <span>Payment Model: Financial Information</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-purple-500/20 rounded-full border border-purple-500/30"></div>
+          <div className="w-3 h-3 bg-purple-100 rounded-full border border-purple-300"></div>
           <span>Changes saved across all collections</span>
         </div>
       </div>

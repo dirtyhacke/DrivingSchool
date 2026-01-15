@@ -124,7 +124,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
       // Personal Info from User model
       studentName: userData.fullName || studentData.fullName || '',
       phone: userData.phoneNumber || studentData.phoneNumber || '',
-      dob: formatDateForInput(userData.dob || studentData.dob),
+      dob: registryData.dob ? formatDateForInput(registryData.dob) : "2000-01-01",
       
       // Registry Info
       applicationNumber: registryData.appNumber || registryData.applicationNumber || `APP-${Date.now().toString().slice(-6)}`,
@@ -300,89 +300,89 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
 
   if (loading) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-8 text-center bg-white">
         <Loader2 className="animate-spin text-blue-500 mx-auto mb-4" size={32} />
-        <span className="text-xs text-slate-400">Loading student registry data...</span>
+        <span className="text-xs text-gray-600">Loading student registry data...</span>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-slate-900 rounded-2xl overflow-hidden border border-white/10">
+    <div className="h-full flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-xl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white border-b border-white/10">
+      <div className="bg-gradient-to-r from-blue-50 to-white p-6 text-gray-800 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Database className="text-blue-400" size={24} />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Database className="text-blue-600" size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-black uppercase italic tracking-tighter">
+              <h3 className="text-xl font-black uppercase italic tracking-tighter text-gray-900">
                 STUDENT REGISTRY EDITOR
               </h3>
-              <p className="text-xs text-blue-300 mt-1">{studentData.email}</p>
+              <p className="text-xs text-blue-600 mt-1">{studentData.email}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
           >
             <X size={24} />
           </button>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <FileText size={10} /> Application
             </div>
             <input
               type="text"
               value={formData.applicationNumber}
               onChange={(e) => handleFieldChange('applicationNumber', e.target.value)}
-              className="w-full bg-transparent text-white font-bold text-sm border-none outline-none placeholder:text-slate-500"
+              className="w-full bg-transparent text-gray-900 font-bold text-sm border-none outline-none placeholder:text-gray-400"
               placeholder="APP-0001"
             />
           </div>
           
-          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <Car size={10} /> Category
             </div>
             <select
               value={formData.category}
               onChange={(e) => handleFieldChange('category', e.target.value)}
-              className="w-full bg-transparent text-white font-bold text-sm border-none outline-none cursor-pointer"
+              className="w-full bg-transparent text-gray-900 font-bold text-sm border-none outline-none cursor-pointer"
             >
               {categories.map(cat => (
-                <option key={cat} value={cat} className="bg-slate-900">
+                <option key={cat} value={cat} className="bg-white">
                   {cat.replace('-', ' ').toUpperCase()}
                 </option>
               ))}
             </select>
           </div>
           
-          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <CreditCard size={10} /> Total Fee
             </div>
             <div className="flex items-center">
-              <span className="text-slate-400 mr-1">₹</span>
+              <span className="text-gray-600 mr-1">₹</span>
               <input
                 type="number"
                 value={formData.totalFee}
                 onChange={(e) => handleFieldChange('totalFee', e.target.value)}
-                className="w-full bg-transparent text-white font-bold text-sm border-none outline-none"
+                className="w-full bg-transparent text-gray-900 font-bold text-sm border-none outline-none"
                 placeholder="0"
               />
             </div>
           </div>
           
-          <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+          <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <CreditCard size={10} /> Balance
             </div>
-            <div className={`text-white font-bold text-sm ${formData.balance === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <div className={`font-bold text-sm ${formData.balance === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
               ₹{formData.balance}
             </div>
           </div>
@@ -390,108 +390,108 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
       </div>
 
       {/* Main Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div className="space-y-6">
           {/* Personal Information */}
-          <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/10">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <UserIcon size={16} className="text-blue-400" />
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h4 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <UserIcon size={16} className="text-blue-600" />
               PERSONAL INFORMATION
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   Full Name
                 </label>
                 <input
                   type="text"
                   value={formData.studentName}
                   onChange={(e) => handleFieldChange('studentName', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   placeholder="Enter full name"
                 />
               </div>
               
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   Phone Number
                 </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleFieldChange('phone', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   placeholder="Enter phone number"
                 />
               </div>
               
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   Date of Birth
                 </label>
                 <input
                   type="date"
                   value={formData.dob}
                   onChange={(e) => handleFieldChange('dob', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
             </div>
           </div>
 
           {/* Test Dates */}
-          <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/10">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Calendar size={16} className="text-blue-400" />
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h4 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Calendar size={16} className="text-blue-600" />
               TEST DATES
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   LL Date
                 </label>
                 <input
                   type="date"
                   value={formData.llDate}
                   onChange={(e) => handleFieldChange('llDate', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
                 {formData.llDate && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {new Date(formData.llDate).toLocaleDateString()}
                   </p>
                 )}
               </div>
               
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   DL Date
                 </label>
                 <input
                   type="date"
                   value={formData.dlDate}
                   onChange={(e) => handleFieldChange('dlDate', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
                 {formData.dlDate && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {new Date(formData.dlDate).toLocaleDateString()}
                   </p>
                 )}
               </div>
               
               <div>
-                <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                   LL Validity
                 </label>
                 <input
                   type="date"
                   value={formData.validity}
                   onChange={(e) => handleFieldChange('validity', e.target.value)}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-orange-400 font-medium focus:outline-none focus:border-orange-500"
+                  className="w-full p-3 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 font-medium focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                 />
                 {formData.validity && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Valid until: {new Date(formData.validity).toLocaleDateString()}
                   </p>
                 )}
@@ -500,59 +500,59 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
           </div>
 
           {/* Financial Information */}
-          <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/10">
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <CreditCard size={16} className="text-emerald-400" />
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h4 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <CreditCard size={16} className="text-emerald-600" />
               FINANCIAL INFORMATION
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
-                <label className="block text-xs text-emerald-400 font-bold uppercase tracking-wider mb-2">
+              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                <label className="block text-xs text-emerald-700 font-bold uppercase tracking-wider mb-2">
                   Paid Amount
                 </label>
                 <div className="flex items-center">
-                  <span className="text-emerald-400 font-bold mr-2">₹</span>
+                  <span className="text-emerald-700 font-bold mr-2">₹</span>
                   <input
                     type="number"
                     value={formData.feePaid}
                     onChange={(e) => handleFieldChange('feePaid', e.target.value)}
-                    className="w-full bg-transparent text-emerald-300 font-bold text-lg border-none outline-none"
+                    className="w-full bg-transparent text-emerald-800 font-bold text-lg border-none outline-none"
                     placeholder="0"
                   />
                 </div>
-                <p className="text-xs text-emerald-400/60 mt-1">
+                <p className="text-xs text-emerald-600/80 mt-1">
                   Amount already paid
                 </p>
               </div>
               
-              <div className="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/20">
-                <div className="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-2">
+              <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-200">
+                <div className="text-xs text-cyan-700 font-bold uppercase tracking-wider mb-2">
                   Total Fee
                 </div>
                 <div className="flex items-center">
-                  <span className="text-cyan-400 font-bold mr-2">₹</span>
-                  <span className="text-cyan-300 font-bold text-lg">
+                  <span className="text-cyan-700 font-bold mr-2">₹</span>
+                  <span className="text-cyan-800 font-bold text-lg">
                     {formData.totalFee}
                   </span>
                 </div>
-                <p className="text-xs text-cyan-400/60 mt-1">
+                <p className="text-xs text-cyan-600/80 mt-1">
                   Complete course fee
                 </p>
               </div>
               
-              <div className={`p-4 rounded-xl border ${formData.balance === 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20'}`}>
+              <div className={`p-4 rounded-xl border ${formData.balance === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
                 <div className="text-xs font-bold uppercase tracking-wider mb-2">
-                  <span className={formData.balance === 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                  <span className={formData.balance === 0 ? 'text-emerald-700' : 'text-amber-700'}>
                     {formData.balance === 0 ? 'PAID IN FULL' : 'BALANCE DUE'}
                   </span>
                 </div>
                 <div className="flex items-center">
-                  <span className={`font-bold mr-2 ${formData.balance === 0 ? 'text-emerald-300' : 'text-amber-300'}`}>₹</span>
-                  <span className={`font-bold text-lg ${formData.balance === 0 ? 'text-emerald-300' : 'text-amber-300'}`}>
+                  <span className={`font-bold mr-2 ${formData.balance === 0 ? 'text-emerald-800' : 'text-amber-800'}`}>₹</span>
+                  <span className={`font-bold text-lg ${formData.balance === 0 ? 'text-emerald-800' : 'text-amber-800'}`}>
                     {formData.balance}
                   </span>
                 </div>
-                <p className={`text-xs mt-1 ${formData.balance === 0 ? 'text-emerald-400/60' : 'text-amber-400/60'}`}>
+                <p className={`text-xs mt-1 ${formData.balance === 0 ? 'text-emerald-600/80' : 'text-amber-600/80'}`}>
                   {formData.balance === 0 ? 'All payments completed' : 'Pending amount to be paid'}
                 </p>
               </div>
@@ -560,32 +560,32 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
             
             {/* Status */}
             <div className="mt-4">
-              <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+              <label className="block text-xs text-gray-600 font-bold uppercase tracking-wider mb-2">
                 Student Status
               </label>
               <select
                 value={formData.status}
                 onChange={(e) => handleFieldChange('status', e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               >
-                <option value="active" className="bg-slate-900">Active</option>
-                <option value="completed" className="bg-slate-900">Completed</option>
-                <option value="discontinued" className="bg-slate-900">Discontinued</option>
-                <option value="on_hold" className="bg-slate-900">On Hold</option>
+                <option value="active" className="bg-white">Active</option>
+                <option value="completed" className="bg-white">Completed</option>
+                <option value="discontinued" className="bg-white">Discontinued</option>
+                <option value="on_hold" className="bg-white">On Hold</option>
               </select>
             </div>
           </div>
 
           {/* Sessions */}
-          <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/10">
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <Calendar size={16} className="text-blue-400" />
+              <h4 className="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <Calendar size={16} className="text-blue-600" />
                 TRAINING SESSIONS ({formData.sessions.length})
               </h4>
               <button
                 onClick={addSession}
-                className="px-4 py-2 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
               >
                 <PlusCircle size={14} />
                 ADD SESSION
@@ -593,8 +593,8 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
             </div>
             
             {formData.sessions.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <Calendar size={32} className="mx-auto mb-2 text-slate-600" />
+              <div className="text-center py-8 text-gray-500">
+                <Calendar size={32} className="mx-auto mb-2 text-gray-300" />
                 <p>No sessions recorded.</p>
                 <p className="text-xs mt-1">Click "Add Session" to start tracking training.</p>
               </div>
@@ -602,7 +602,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-full">
                   <thead>
-                    <tr className="text-xs text-slate-400 font-bold uppercase tracking-wider border-b border-white/10">
+                    <tr className="text-xs text-gray-600 font-bold uppercase tracking-wider border-b border-gray-200">
                       <th className="pb-3 text-left pl-2">Date</th>
                       <th className="pb-3 text-center">Vehicle Type</th>
                       <th className="pb-3 text-center">Ground</th>
@@ -613,23 +613,23 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                   </thead>
                   <tbody>
                     {formData.sessions.map((session, index) => (
-                      <tr key={index} className="border-b border-white/10 last:border-0 hover:bg-white/5">
+                      <tr key={index} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
                         <td className="py-3 pl-2">
                           <input
                             type="date"
                             value={session.date}
                             onChange={(e) => handleSessionChange(index, 'date', e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                           />
                         </td>
                         <td className="py-3">
                           <select
                             value={session.vehicleType}
                             onChange={(e) => handleSessionChange(index, 'vehicleType', e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                           >
                             {categories.map(cat => (
-                              <option key={cat} value={cat} className="bg-slate-900">
+                              <option key={cat} value={cat} className="bg-white">
                                 {cat.replace('-', ' ')}
                               </option>
                             ))}
@@ -640,7 +640,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                             type="number"
                             value={session.ground}
                             onChange={(e) => handleSessionChange(index, 'ground', e.target.value)}
-                            className="w-16 mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white text-center focus:outline-none focus:border-blue-500"
+                            className="w-16 mx-auto bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 text-center focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             min="0"
                             placeholder="0"
                           />
@@ -650,7 +650,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                             type="number"
                             value={session.simulation}
                             onChange={(e) => handleSessionChange(index, 'simulation', e.target.value)}
-                            className="w-16 mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-blue-400 text-center focus:outline-none focus:border-blue-500"
+                            className="w-16 mx-auto bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-sm text-blue-800 text-center focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             min="0"
                             placeholder="0"
                           />
@@ -660,7 +660,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                             type="number"
                             value={session.road}
                             onChange={(e) => handleSessionChange(index, 'road', e.target.value)}
-                            className="w-16 mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-emerald-400 text-center focus:outline-none focus:border-emerald-500"
+                            className="w-16 mx-auto bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm text-emerald-800 text-center focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             min="0"
                             placeholder="0"
                           />
@@ -668,7 +668,7 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                         <td className="py-3 pr-2 text-right">
                           <button
                             onClick={() => removeSession(index)}
-                            className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-lg hover:bg-red-500/30 transition-colors"
+                            className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-lg hover:bg-red-200 transition-colors"
                           >
                             Remove
                           </button>
@@ -680,23 +680,23 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
                 
                 {/* Session Summary */}
                 {formData.sessions.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center">
-                        <div className="text-xs text-slate-400 uppercase font-bold mb-1">Total Ground</div>
-                        <div className="text-lg font-bold text-white">
+                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Total Ground</div>
+                        <div className="text-lg font-bold text-gray-900">
                           {formData.sessions.reduce((sum, session) => sum + (Number(session.ground) || 0), 0)} hrs
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-slate-400 uppercase font-bold mb-1">Total Simulation</div>
-                        <div className="text-lg font-bold text-blue-400">
+                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Total Simulation</div>
+                        <div className="text-lg font-bold text-blue-700">
                           {formData.sessions.reduce((sum, session) => sum + (Number(session.simulation) || 0), 0)} hrs
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-slate-400 uppercase font-bold mb-1">Total Road</div>
-                        <div className="text-lg font-bold text-emerald-400">
+                        <div className="text-xs text-gray-600 uppercase font-bold mb-1">Total Road</div>
+                        <div className="text-lg font-bold text-emerald-700">
                           {formData.sessions.reduce((sum, session) => sum + (Number(session.road) || 0), 0)} hrs
                         </div>
                       </div>
@@ -710,22 +710,22 @@ const EmbeddedStudentEditor = ({ studentData, onClose }) => {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-white/10 p-6 bg-slate-800/50">
+      <div className="border-t border-gray-200 p-6 bg-white">
         <div className="flex justify-between items-center">
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-gray-500">
             Last updated: {studentRegistry?.updatedAt ? new Date(studentRegistry.updatedAt).toLocaleString() : 'New registry'}
           </div>
           <div className="flex gap-4">
             <button
               onClick={onClose}
-              className="px-6 py-3 border border-white/20 text-slate-300 text-sm font-bold uppercase tracking-wider rounded-xl hover:bg-white/10 transition-colors"
+              className="px-6 py-3 border border-gray-300 text-gray-700 text-sm font-bold uppercase tracking-wider rounded-xl hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={saveChanges}
               disabled={saving}
-              className="px-6 py-3 bg-blue-600 text-white text-sm font-bold uppercase tracking-wider rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-blue-600 text-white text-sm font-bold uppercase tracking-wider rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {saving ? (
                 <>
@@ -784,10 +784,10 @@ const UsersRegistry = () => {
       const data = await res.json();
       if (data.success) {
         setStudents(students.filter(s => s._id !== id));
-        toast.success(`${deleteModal.userName} purged successfully`);
+        toast.success(`${deleteModal.userName} deleted successfully`);
       }
     } catch (err) {
-      toast.error("Critical failure during purge");
+      toast.error("Error during deletion");
     } finally {
       setDeleteModal({ show: false, userId: null, userName: "" });
     }
@@ -795,7 +795,7 @@ const UsersRegistry = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success("Email Copied", { icon: '📋', style: { background: '#0f172a', color: '#fff' }});
+    toast.success("Email Copied", { icon: '📋', style: { background: '#ffffff', color: '#1f2937' }});
   };
 
   const filteredStudents = students.filter(s => 
@@ -805,18 +805,18 @@ const UsersRegistry = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen max-h-screen w-full bg-[#05080a] text-slate-200 font-sans overflow-hidden">
+    <div className="flex flex-col h-screen max-h-screen w-full bg-white text-gray-800 font-sans overflow-hidden">
       
       {/* --- STICKY HEADER SECTION --- */}
-      <div className="flex-none p-6 md:p-8 border-b border-white/5 bg-slate-950/50 backdrop-blur-md z-40">
+      <div className="flex-none p-6 md:p-8 border-b border-gray-200 bg-white z-40 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between items-center gap-6 max-w-[1600px] mx-auto w-full">
           <div>
             <div className="flex items-center gap-4">
-              <div className="h-10 w-1 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
+              <div className="h-10 w-1 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.3)]"></div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-white">Master Registry</h2>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2 mt-1">
-                   <ShieldAlert size={12} className="text-blue-600"/> Security Level 01 <span className="text-slate-800">|</span> <span className="text-blue-400">{filteredStudents.length} Nodes Active</span>
+                <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-gray-900">Master Registry</h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] flex items-center gap-2 mt-1">
+                   <ShieldAlert size={12} className="text-blue-600"/> Security Level 01 <span className="text-gray-300">|</span> <span className="text-blue-600">{filteredStudents.length} Students Active</span>
                 </p>
               </div>
             </div>
@@ -824,17 +824,17 @@ const UsersRegistry = () => {
 
           <div className="flex items-center gap-4 w-full lg:w-auto">
             <div className="relative flex-1 lg:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="text" 
-                placeholder="Search Identity..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all placeholder:text-slate-600"
+                placeholder="Search by name, email, or location..."
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 shadow-sm"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <button 
                 onClick={fetchMasterRegistry}
-                className={`p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${isRefreshing ? 'animate-spin text-blue-500' : 'text-slate-400'}`}
+                className={`p-3 rounded-2xl bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-all ${isRefreshing ? 'animate-spin text-blue-600' : 'text-gray-600'}`}
             >
               <RefreshCw size={20} />
             </button>
@@ -843,26 +843,26 @@ const UsersRegistry = () => {
       </div>
 
       {/* --- SCROLLABLE CONTENT AREA --- */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-gray-50">
         <div className="max-w-[1600px] mx-auto w-full">
             {/* Desktop View */}
             <div className="hidden lg:block">
                 <table className="w-full text-left border-separate border-spacing-0">
-                    <thead className="sticky top-0 bg-[#05080a] z-30">
-                        <tr className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">
-                            <th className="px-8 py-5 border-b border-white/5">Identity Node</th>
-                            <th className="px-8 py-5 border-b border-white/5">Contact</th>
-                            <th className="px-8 py-5 border-b border-white/5">Location</th>
-                            <th className="px-8 py-5 border-b border-white/5">Timestamp</th>
-                            <th className="px-8 py-5 border-b border-white/5 text-right">Ops</th>
+                    <thead className="sticky top-0 bg-white z-30 shadow-sm">
+                        <tr className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">
+                            <th className="px-8 py-5 border-b border-gray-200">Student Information</th>
+                            <th className="px-8 py-5 border-b border-gray-200">Contact</th>
+                            <th className="px-8 py-5 border-b border-gray-200">Location</th>
+                            <th className="px-8 py-5 border-b border-gray-200">Timestamp</th>
+                            <th className="px-8 py-5 border-b border-gray-200 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-gray-100">
                         {loading ? (
                             <tr>
                             <td colSpan="5" className="py-32 text-center">
                                 <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={32} />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">Decrypting Data...</span>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Loading Data...</span>
                             </td>
                             </tr>
                         ) : filteredStudents.map((student) => (
@@ -884,7 +884,7 @@ const UsersRegistry = () => {
                 {loading ? (
                     <div className="py-32 text-center">
                         <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" />
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Scanning...</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading...</span>
                     </div>
                 ) : filteredStudents.length > 0 ? (
                     filteredStudents.map(student => (
@@ -897,24 +897,24 @@ const UsersRegistry = () => {
                         />
                     ))
                 ) : (
-                    <div className="py-20 text-center text-slate-700 uppercase text-[10px] font-black tracking-widest italic">Zero matches found in database</div>
+                    <div className="py-20 text-center text-gray-400 uppercase text-[10px] font-black tracking-widest italic">No matches found in database</div>
                 )}
             </div>
         </div>
       </div>
 
       {/* --- FOOTER STATUS BAR --- */}
-      <div className="flex-none bg-slate-950 border-t border-white/5 px-6 py-3 flex justify-between items-center z-40">
+      <div className="flex-none bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-40 shadow-sm">
         <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">System Live</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                <span className="text-[9px] font-black text-gray-500 uppercase tracking-tighter">System Live</span>
             </div>
-            <span className="text-slate-800 font-black">/</span>
-            <span className="text-[9px] font-black text-blue-600 uppercase">Buffer: Stable</span>
+            <span className="text-gray-300 font-black">/</span>
+            <span className="text-[9px] font-black text-blue-600 uppercase">Status: Active</span>
         </div>
-        <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest italic flex items-center gap-2">
-            Protocol Version 4.0.2 <div className="w-1 h-1 bg-slate-800 rounded-full"></div> 2024
+        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest italic flex items-center gap-2">
+            Version 4.0.2 <div className="w-1 h-1 bg-gray-300 rounded-full"></div> 2024
         </div>
       </div>
 
@@ -926,7 +926,7 @@ const UsersRegistry = () => {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/95 backdrop-blur-lg" 
+              className="absolute inset-0 bg-white/95 backdrop-blur-lg" 
               onClick={() => setSelectedStudent(null)}
             ></motion.div>
             
@@ -954,17 +954,17 @@ const UsersRegistry = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/98 backdrop-blur-2xl p-4"
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-white/98 backdrop-blur-2xl p-4"
             onClick={() => setExpandedImg(null)}
           >
-            <button className="absolute top-10 right-10 text-white/50 hover:text-white transition-all">
+            <button className="absolute top-10 right-10 text-gray-600 hover:text-gray-900 transition-all">
               <X size={40} strokeWidth={1} />
             </button>
             <motion.img 
                 initial={{ scale: 0.9, opacity: 0 }} 
                 animate={{ scale: 1, opacity: 1 }}
                 src={expandedImg} 
-                className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border border-white/10 object-contain" 
+                className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border border-gray-200 object-contain" 
                 alt="Profile"
             />
           </motion.div>
@@ -974,18 +974,18 @@ const UsersRegistry = () => {
       {/* --- DELETE CONFIRMATION MODAL --- */}
       {deleteModal.show && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-sm" onClick={() => setDeleteModal({show:false})}></div>
-          <div className="bg-white rounded-2xl p-10 w-full max-w-sm relative z-[1010] shadow-2xl">
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm" onClick={() => setDeleteModal({show:false})}></div>
+          <div className="bg-white rounded-2xl p-10 w-full max-w-sm relative z-[1010] shadow-2xl border border-gray-200">
             <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 animate-pulse">
               <AlertTriangle size={40} />
             </div>
-            <h3 className="text-slate-950 font-black uppercase italic text-2xl text-center tracking-tighter">Authorize Purge?</h3>
-            <p className="text-slate-500 text-[11px] mt-4 font-medium text-center leading-relaxed">
-              Permanent removal of <span className="font-bold text-slate-900 underline">{deleteModal.userName}</span> from master registry. This action cannot be undone.
+            <h3 className="text-gray-900 font-black uppercase italic text-2xl text-center tracking-tighter">Confirm Deletion?</h3>
+            <p className="text-gray-600 text-[11px] mt-4 font-medium text-center leading-relaxed">
+              Permanent removal of <span className="font-bold text-gray-900 underline">{deleteModal.userName}</span> from master registry. This action cannot be undone.
             </p>
             <div className="flex flex-col gap-3 mt-8">
-              <button onClick={confirmDelete} className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95">Confirm Execution</button>
-              <button onClick={() => setDeleteModal({show:false})} className="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em]">Abort Protocol</button>
+              <button onClick={confirmDelete} className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-sm">Confirm Deletion</button>
+              <button onClick={() => setDeleteModal({show:false})} className="w-full py-4 rounded-2xl bg-gray-100 text-gray-600 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-gray-200 transition-all">Cancel</button>
             </div>
           </div>
         </div>
@@ -993,10 +993,10 @@ const UsersRegistry = () => {
 
       {/* CSS for custom scrollbar */}
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
       `}</style>
     </div>
   );
@@ -1017,32 +1017,32 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal, setSelectedStude
     };
     
     return (
-    <tr className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={handleRowClick}>
+    <tr className="hover:bg-gray-50 transition-colors group cursor-pointer" onClick={handleRowClick}>
       <td className="px-8 py-5">
         <div className="flex items-center gap-4">
           <div 
             onClick={handleImageClick}
-            className="w-12 h-12 rounded-2xl overflow-hidden border border-white/5 bg-slate-900 cursor-zoom-in active:scale-90 transition-all shadow-lg flex-shrink-0"
+            className="w-12 h-12 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 cursor-zoom-in active:scale-90 transition-all shadow-sm flex-shrink-0"
           >
             {student.profileImage ? (
               <img src={student.profileImage} className="w-full h-full object-cover" alt="" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-700">
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
                 <UserIcon size={20} />
               </div>
             )}
           </div>
           <div className="min-w-0">
-            <div className="font-black text-sm text-white uppercase italic tracking-tight hover:text-blue-500 transition-all truncate flex items-center gap-2">
+            <div className="font-black text-sm text-gray-900 uppercase italic tracking-tight hover:text-blue-600 transition-all truncate flex items-center gap-2">
               {student.fullName}
-              <Database size={12} className="text-blue-400" />
+              <Database size={12} className="text-blue-600" />
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-slate-500 lowercase font-medium truncate">{student.email}</span>
+              <span className="text-[10px] text-gray-500 lowercase font-medium truncate">{student.email}</span>
               <button onClick={(e) => {
                 e.stopPropagation();
                 copyToClipboard(student.email);
-              }} className="text-slate-700 hover:text-blue-400 transition-colors flex-shrink-0">
+              }} className="text-gray-400 hover:text-blue-500 transition-colors flex-shrink-0">
                 <Copy size={12} />
               </button>
             </div>
@@ -1054,21 +1054,21 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal, setSelectedStude
           href={`https://wa.me/${student.phoneNumber}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[10px] text-emerald-500 font-black tracking-widest hover:bg-emerald-500/10 transition-all truncate max-w-[180px]"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-700 font-black tracking-widest hover:bg-emerald-100 transition-all truncate max-w-[180px] shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></div>
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
           <span className="truncate">{student.phoneNumber}</span>
         </a>
       </td>
       <td className="px-8 py-5">
-        <div className="text-[10px] font-black text-blue-500 uppercase flex items-center gap-2 tracking-widest truncate max-w-[150px]">
-            <MapPin size={12} className="text-slate-600 flex-shrink-0" />
+        <div className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2 tracking-widest truncate max-w-[150px]">
+            <MapPin size={12} className="text-gray-400 flex-shrink-0" />
             <span className="truncate">{student.location}</span>
         </div>
       </td>
       <td className="px-8 py-5">
-          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{dateObj.toLocaleDateString()}</div>
+          <div className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">{dateObj.toLocaleDateString()}</div>
           <div className="text-[9px] text-blue-600 font-black flex items-center gap-1 mt-1 uppercase italic">
             <Clock size={10} /> {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
@@ -1077,7 +1077,7 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal, setSelectedStude
         <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
             <button 
               onClick={() => setSelectedStudent(student)} 
-              className="p-2.5 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-all flex items-center gap-1"
+              className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-1 border border-gray-200 hover:border-blue-200"
               title="Edit Student Registry"
             >
               <Edit3 size={18} />
@@ -1085,7 +1085,7 @@ const DesktopRow = ({ student, copyToClipboard, setDeleteModal, setSelectedStude
             </button>
             <button 
               onClick={() => setDeleteModal({ show: true, userId: student._id, userName: student.fullName })} 
-              className="p-2.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+              className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-gray-200 hover:border-red-200"
               title="Delete Student"
             >
               <Trash2 size={18} />
@@ -1112,31 +1112,31 @@ const MobileCard = ({ student, setDeleteModal, setSelectedStudent, setExpandedIm
     
     return (
     <div 
-      className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm cursor-pointer hover:bg-white/[0.03] transition-all"
+      className="bg-white border border-gray-200 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm cursor-pointer hover:bg-gray-50 transition-all shadow-sm"
       onClick={handleCardClick}
     >
         <div className="flex items-center gap-4 mb-5">
             <div 
                 onClick={handleImageClick}
-                className="w-14 h-14 rounded-2xl border border-white/10 overflow-hidden cursor-zoom-in shadow-xl flex-shrink-0"
+                className="w-14 h-14 rounded-2xl border border-gray-200 overflow-hidden cursor-zoom-in shadow-sm flex-shrink-0"
             >
                 {student.profileImage ? (
                   <img src={student.profileImage} className="w-full h-full object-cover" alt="" />
                 ) : (
-                  <div className="w-full h-full bg-slate-900 flex items-center justify-center text-slate-700">
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
                     <UserIcon size={24} />
                   </div>
                 )}
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-white font-black uppercase text-sm tracking-tight italic truncate">
+                  <h4 className="text-gray-900 font-black uppercase text-sm tracking-tight italic truncate">
                     {student.fullName}
                   </h4>
-                  <Database size={12} className="text-blue-400 flex-shrink-0" />
+                  <Database size={12} className="text-blue-600 flex-shrink-0" />
                 </div>
                 <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[9px] text-slate-500 uppercase font-black tracking-tighter">{dateObj.toLocaleDateString()}</span>
+                    <span className="text-[9px] text-gray-500 uppercase font-black tracking-tighter">{dateObj.toLocaleDateString()}</span>
                     <span className="text-[9px] text-blue-600 font-black uppercase flex items-center gap-1 italic">
                         <Clock size={10} /> {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -1145,9 +1145,9 @@ const MobileCard = ({ student, setDeleteModal, setSelectedStudent, setExpandedIm
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                <p className="text-[7px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Region</p>
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-500 uppercase italic truncate">
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                <p className="text-[7px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Region</p>
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase italic truncate">
                     <MapPin size={10} /> {student.location}
                 </div>
             </div>
@@ -1155,12 +1155,12 @@ const MobileCard = ({ student, setDeleteModal, setSelectedStudent, setExpandedIm
               href={`https://wa.me/${student.phoneNumber}`} 
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10 flex flex-col"
+              className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-                <p className="text-[7px] font-black text-emerald-500/60 uppercase tracking-[0.2em] mb-1">WhatsApp</p>
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-white truncate">
-                    <Smartphone size={10} className="text-emerald-500"/> {student.phoneNumber}
+                <p className="text-[7px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">WhatsApp</p>
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-900 truncate">
+                    <Smartphone size={10} className="text-emerald-600"/> {student.phoneNumber}
                 </div>
             </a>
         </div>
@@ -1171,7 +1171,7 @@ const MobileCard = ({ student, setDeleteModal, setSelectedStudent, setExpandedIm
                 e.stopPropagation();
                 setSelectedStudent(student);
               }}
-              className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 border border-blue-200"
             >
                 <Edit3 size={14} /> Edit Registry
             </button>
@@ -1180,7 +1180,7 @@ const MobileCard = ({ student, setDeleteModal, setSelectedStudent, setExpandedIm
                 e.stopPropagation();
                 setDeleteModal({ show: true, userId: student._id, userName: student.fullName });
               }} 
-              className="p-3 bg-red-500/10 text-red-500 rounded-xl active:scale-90 border border-red-500/20 flex-shrink-0"
+              className="p-3 bg-red-50 text-red-700 rounded-xl active:scale-90 border border-red-200 flex-shrink-0 hover:bg-red-100"
             >
                 <Trash2 size={16} />
             </button>
